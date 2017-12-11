@@ -395,15 +395,12 @@ int NutrientMovementViaWater::Execute()
 
 void NutrientMovementViaWater::NitrateLoss()
 {
-/// debugging code to find the cell id with the maximum nutrient loss 
-// 	float tmpPercN = NODATA_VALUE;
-// 	int tmpIdx = -1;
 	for (int iLayer = 0; iLayer < m_nRoutingLayers; iLayer++)
 	{
 		// There are not any flow relationship within each routing layer.
 		// So parallelization can be done here.
 		int nCells = (int) m_routingLayers[iLayer][0];
-//#pragma omp parallel for
+#pragma omp parallel for
 		for (int iCell = 1; iCell <= nCells; iCell++)
 		{
 			int i = (int) m_routingLayers[iLayer][iCell]; // cell ID
@@ -434,24 +431,12 @@ void NutrientMovementViaWater::NitrateLoss()
 				// Calculate the concentration of nitrate in the mobile water (con),
 				// equation 4:2.1.2, 4:2.1.3 and 4:2.1.4 in SWAT Theory 2009, p269
 				mw = m_sol_perco[i][k] + sro + m_flat[i][k] + 1.e-10f;
-				//if (i == 918)
-				//	cout<<"sol_perco, k: "<<k<<", "<<m_sol_perco[i][k]<<", flat: "
-				//	<<m_flat[i][k]<<endl;
 				float satportion = ((1.f - m_anion_excl[i]) * m_sol_wsatur[i][k]);
 				//if (mw > satportion) mw = satportion;
 				ww = -mw / satportion;
 				vno3 = m_sol_no3[i][k] * (1.f - exp(ww)); // kg/ha
 				if (mw > 1.e-10f)
 					con = max(vno3 / mw, 0.f) ;// kg/ha/mm = 100 mg/L
-				    
-				//if (con > 0.1) con = 0.1;
-				//if (con != con)
-				//{
-				//	cout<<"cellid: "<<i<<", layer: "<<k<<", perco water: "<<m_sol_perco[i][k]<<", satportion: "<<satportion<<
-				//		", mv: "<<mw<<", ww: "<<ww<<", vno3: "<<vno3<<", con(100 mg/L): "<<con
-				//		<<", pre sol no3: "<<tmpSolNo3<<", sol no3: "<<m_sol_no3[i][k]<<endl;
-				//	//throw ModelException(MID_NUTRMV, "NitrateLoss", "NAN occurs of Soil NO3, please check!");
-				//}
 
 				// calculate nitrate in surface runoff
 				// concentration of nitrate in surface runoff (cosurf)

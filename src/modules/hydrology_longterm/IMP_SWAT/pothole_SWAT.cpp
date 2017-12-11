@@ -258,17 +258,13 @@ int IMP_SWAT::Execute()
 {
 	CheckInputData();
 	initialOutputs();
-	
-	float day = JulianDay(m_date);
-	if (day == 7.f){
-		bool flag = true;
-	}
+
 	for (int iLayer = 0; iLayer < m_nRoutingLayers; ++iLayer)
 	{
 		// There are not any flow relationship within each routing layer.
 		// So parallelization can be done here.
 		int nCells = (int) m_routingLayers[iLayer][0];
-//#pragma omp parallel for
+#pragma omp parallel for
 		for (int iCell = 1; iCell <= nCells; ++iCell)
 		{
 			int id = (int) m_routingLayers[iLayer][iCell]; // cell index
@@ -291,7 +287,7 @@ int IMP_SWAT::Execute()
 	/// reCalculate the surface runoff, sediment, nutrient etc. that into the channel
 	// cout<<"pre surq no3 to ch: "<<m_surNO3ToCh[12]<<endl;
 	// cout<<"pre surfq to ch: "<<m_surfqToCh[12]<<", orgp to ch: "<<m_sedOrgPToCh[12]<<endl;
-//#pragma omp parallel for
+#pragma omp parallel for
 	for (int i = 0; i < m_subbasinNum + 1; i++)
 	{
 		m_surfqToCh[i] = 0.f;
@@ -329,7 +325,7 @@ int IMP_SWAT::Execute()
 		}
 	}
 	// cout<<"maximum sedorgp id: "<<idx<< ", surfq: " <<m_surfaceRunoff[idx]<<", sedorgp: "<<m_sedOrgP[idx]<<endl;
-//#pragma omp parallel for
+#pragma omp parallel for
 	
 	for (int i = 0; i < m_nCells; i++)
 	{
@@ -345,7 +341,7 @@ int IMP_SWAT::Execute()
 		m_sedMinPAToCh[subi] += m_sedActiveMinP[i] * m_cellArea;
 		m_sedMinPSToCh[subi] += m_sedStableMinP[i] * m_cellArea;
 	}
-//#pragma omp parallel for
+#pragma omp parallel for
 	
 	for (int i = 1; i < m_subbasinNum + 1; i++)
 	{

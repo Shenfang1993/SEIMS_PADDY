@@ -1925,8 +1925,9 @@ void MGTOpt_SWAT::ScheduledManagement(int cellIdx, int &factoryID, int nOp)
             ExecutePesticideOperation(cellIdx, factoryID, nOp);
             break;
         case BMP_PLTOP_HarvestKill:
-			if (landuse_id == 33) ExecuteRiceHarvestOperation(cellIdx, factoryID, nOp);
-			else ExecuteHarvestKillOperation(cellIdx, factoryID, nOp);		
+			/*if (landuse_id == 33) ExecuteRiceHarvestOperation(cellIdx, factoryID, nOp);
+			else ExecuteHarvestKillOperation(cellIdx, factoryID, nOp);*/
+			ExecuteHarvestKillOperation(cellIdx, factoryID, nOp);
             //ExecuteHarvestKillOperation(cellIdx, factoryID, nOp);
 			break;
         case BMP_PLTOP_Tillage:
