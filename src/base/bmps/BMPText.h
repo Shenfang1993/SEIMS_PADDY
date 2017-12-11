@@ -146,7 +146,7 @@
 #define BMP_PLTOP_FLD_HUSC                    "HUSC"
 #define BMP_PLTOP_FLD_MGTOP                "MGT_OP"
 #define BMP_PLTOP_FLD_MGT_PRE            "MGT"
-
+#define BMP_PLTOP_FLD_DVS                "DVS"
 
 ////BMP Type
 //#define BMP_TYPE_REACH					1
@@ -334,6 +334,7 @@
 #define LANDUSE_PARAM_DSC_ST12_IDX  49
 
 #define LANDUSE_ID_WATR 18
+#define LANDUSE_ID_PADDY 33
 
 /// irrigation source code:
 #define IRR_SRC_RCH                    1 /// divert water from reach

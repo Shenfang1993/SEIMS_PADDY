@@ -18,7 +18,7 @@ IMP_SWAT::IMP_SWAT(void) : m_cnv(NODATA_VALUE), m_nCells(-1), m_cellWidth(NODATA
 	m_potNo3(NULL), m_potNH4(NULL), m_potOrgN(NULL), m_potSolP(NULL), m_potOrgP(NULL), m_potActMinP(NULL),
 	m_potStaMinP(NULL), m_potSed(NULL), m_potSand(NULL), m_potSilt(NULL), m_potClay(NULL), m_potSag(NULL), m_potLag(NULL), 
 	m_potVol(NULL), m_potVolMax(NULL), m_potVolMin(NULL), m_potSeep(NULL), m_potEvap(NULL), m_potSurfaceArea(NULL),
-	m_kVolat(NODATA_VALUE), m_kNitri(NODATA_VALUE), m_pot_k(NODATA_VALUE), m_embnkfr_pr(0.15f),
+	m_kVolat(NODATA_VALUE), m_kNitri(NODATA_VALUE), m_pot_k(NODATA_VALUE), m_embnkfr_pr(0.15f), m_potVolUp(NULL),
 	/// overland to channel
 	m_surfqToCh(NULL), m_sedToCh(NULL), m_surNO3ToCh(NULL), m_surNH4ToCh(NULL), m_surSolPToCh(NULL), m_surCodToCh(NULL), 
 	m_sedOrgNToCh(NULL), m_sedOrgPToCh(NULL), m_sedMinPAToCh(NULL), m_sedMinPSToCh(NULL)
@@ -188,6 +188,7 @@ void IMP_SWAT::Set1DData(const char *key, int n, float *data)
 	else if (StringMatch(sk, VAR_IMPOUND_TRIG)) m_impoundTrig = data;
 	else if (StringMatch(sk, VAR_POT_VOLMAXMM)) m_potVolMax = data;
 	else if (StringMatch(sk, VAR_POT_VOLLOWMM)) m_potVolMin = data;
+	else if (StringMatch(sk, VAR_POT_VOLUPMM)) m_potVolUp = data;
 	else if (StringMatch(sk, VAR_SEDYLD)) m_sedYield = data;
 	else if (StringMatch(sk, VAR_SANDYLD)) m_sandYield = data;
 	else if (StringMatch(sk, VAR_SILTYLD)) m_siltYield = data;
@@ -276,8 +277,17 @@ int IMP_SWAT::Execute()
 			else{
 				releaseWater(id);
 			}
+			if(id == 70){
+				ofstream fout;
+				fout.open("j:\\pot.txt", ios::app);
+				fout << m_potVol[70] << "\t" << m_potVolMin[70] << "\n";
+				fout << flush;
+				fout.close();
+			}
 		}
 	}
+	
+	
 	/// reCalculate the surface runoff, sediment, nutrient etc. that into the channel
 	// cout<<"pre surq no3 to ch: "<<m_surNO3ToCh[12]<<endl;
 	// cout<<"pre surfq to ch: "<<m_surfqToCh[12]<<", orgp to ch: "<<m_sedOrgPToCh[12]<<endl;
@@ -748,9 +758,9 @@ void IMP_SWAT::potholeSimulate(int id)
 		}
 	}
 	// force to auto-irrigation at the end of the day, added by LJ.
-	if (m_potVol[id] < UTIL_ZERO)
+	if (m_potVol[id] < m_potVolMin[id])
 	{
-		m_potVol[id] = m_potVolMin[id]; 
+		m_potVol[id] = m_potVolUp[id]; 
 	}
 	//potholeSurfaceArea(id);
 	m_surfaceRunoff[id] = qdayTmp;

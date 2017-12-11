@@ -35,7 +35,7 @@ public:
                          * \param[in] day
                          * \param[in] location Indexes of field to practice the operation (string)
                          */
-                        PlantManagementOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float *parameters);
+                        PlantManagementOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float dvs, float *parameters);
 
                         //! virtual Destructor
                         virtual ~PlantManagementOperation(void);
@@ -47,9 +47,17 @@ public:
                                 return m_useBaseHUSC;
                         }
 
+						float &GetDVS(void) {
+							return m_DVS;
+						}
+
                         float &GetHUFraction() {
                                 return m_frHU;
                         }
+
+						int &GetYear() {
+							return m_year;
+						}
 
                         int &GetMonth() {
                                 return m_month;
@@ -68,6 +76,8 @@ protected:
                         bool m_useBaseHUSC;
                         /// husc
                         float m_frHU;
+						/// development stage of rice
+						float m_DVS;
                         /// year
                         int m_year;
                         /// month
@@ -88,7 +98,7 @@ protected:
                 class PlantOperation:public PlantManagementOperation
                 {
 public:
-                        PlantOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float *parameters);
+                        PlantOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float dvs, float *parameters);
 
                         ~PlantOperation();
 
@@ -146,7 +156,7 @@ private:
                 class IrrigationOperation: public PlantManagementOperation
                 {
 public:
-                        IrrigationOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float *parameters);
+                        IrrigationOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float dvs, float *parameters);
 
                         ~IrrigationOperation();
 
@@ -194,7 +204,7 @@ private:
                 class FertilizerOperation: public PlantManagementOperation
                 {
 public:
-                        FertilizerOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float *parameters);
+                        FertilizerOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float dvs, float *parameters);
 
                         ~FertilizerOperation();
 
@@ -229,7 +239,7 @@ private:
                 class PesticideOperation: public PlantManagementOperation
                 {
 public:
-                        PesticideOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float *parameters);
+                        PesticideOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float dvs, float *parameters);
 
                         ~PesticideOperation();
 
@@ -262,7 +272,7 @@ private:
                 class HarvestKillOperation: public PlantManagementOperation
                 {
 public:
-                        HarvestKillOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float *parameters);
+                        HarvestKillOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float dvs, float *parameters);
 
                         ~HarvestKillOperation();
 
@@ -295,7 +305,7 @@ private:
                 class TillageOperation: public PlantManagementOperation
                 {
 public:
-                        TillageOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float *parameters);
+                        TillageOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float dvs, float *parameters);
 
                         ~TillageOperation();
 
@@ -323,7 +333,7 @@ private:
                 class HarvestOnlyOperation: public PlantManagementOperation
                 {
 public:
-                        HarvestOnlyOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float *parameters);
+                        HarvestOnlyOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float dvs, float *parameters);
 
                         ~HarvestOnlyOperation();
 
@@ -356,7 +366,7 @@ private:
                 class KillOperation:public PlantManagementOperation
                 {
 public:
-                        KillOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float *parameters);
+                        KillOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float dvs, float *parameters);
 
                         ~KillOperation();
 
@@ -372,7 +382,7 @@ public:
                 class GrazingOperation: public PlantManagementOperation
                 {
 public:
-                        GrazingOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float *parameters);
+                        GrazingOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float dvs, float *parameters);
 
                         ~GrazingOperation();
 
@@ -415,7 +425,7 @@ private:
                 class AutoIrrigationOperation: public PlantManagementOperation
                 {
 public:
-                        AutoIrrigationOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float *parameters);
+                        AutoIrrigationOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float dvs, float *parameters);
 
                         ~AutoIrrigationOperation();
 
@@ -468,7 +478,7 @@ private:
                 class AutoFertilizerOperation: public PlantManagementOperation
                 {
 public:
-                        AutoFertilizerOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float *parameters);
+                        AutoFertilizerOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float dvs, float *parameters);
 
                         ~AutoFertilizerOperation();
 
@@ -521,7 +531,7 @@ private:
                 class ReleaseImpoundOperation: public PlantManagementOperation
                 {
 public:
-                        ReleaseImpoundOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float *parameters);
+                        ReleaseImpoundOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float dvs, float *parameters);
 
                         ~ReleaseImpoundOperation();
 
@@ -555,7 +565,7 @@ private:
                 class ContinuousFertilizerOperation: public PlantManagementOperation
                 {
 public:
-                        ContinuousFertilizerOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float *parameters);
+                        ContinuousFertilizerOperation(int mgtOp, bool usebaseHU, float husc, int year, int month, int day, float dvs, float *parameters);
 
                         ~ContinuousFertilizerOperation();
 
@@ -593,7 +603,7 @@ private:
                 class ContinuousPesticideOperation: public PlantManagementOperation
                 {
 public:
-                        ContinuousPesticideOperation(int mgtOp,bool usebaseHU,  float husc, int year, int month, int day, float *parameters);
+                        ContinuousPesticideOperation(int mgtOp,bool usebaseHU,  float husc, int year, int month, int day, float dvs, float *parameters);
 
                         ~ContinuousPesticideOperation();
 
@@ -631,7 +641,7 @@ private:
                 class BurningOperation: public PlantManagementOperation
                 {
 public:
-                        BurningOperation(int mgtOp, bool useBaseHU, float husc, int year, int month, int day, float *parameters);
+                        BurningOperation(int mgtOp, bool useBaseHU, float husc, int year, int month, int day, float dvs, float *parameters);
 
                         ~BurningOperation();
 

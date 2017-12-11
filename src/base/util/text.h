@@ -692,6 +692,7 @@
 #define VAR_IMPOUND_TRIG "impound_trig"
 #define VAR_POT_VOLMAXMM "pot_volmaxmm"
 #define VAR_POT_VOLLOWMM "pot_vollowmm"
+#define VAR_POT_VOLUPMM "pot_volupmm"
 #define VAR_INET "INET"                             /// evaporation from the interception storage
 #define VAR_INFIL "INFIL"                           /// Infiltration
 #define VAR_INFILCAPSURPLUS "INFILCAPSURPLUS"
@@ -1389,6 +1390,7 @@
 #define DESC_POT_SOLPDECAY "Soluble phosphorus decay rate in impounded water body"
 #define DESC_POT_VOLMAXMM "maximum volume of water stored in the depression/impounded area"
 #define DESC_POT_VOLLOWMM "lowest volume of water stored in the depression/impounded area"
+#define DESC_POT_VOLUPMM "max fit volume of water stored in the depression/impounded area"
 #define DESC_EXT_COEF "light extinction coefficient"
 #define DESC_FERTILIZER_LOOKUP "Fertilizer database"
 #define DESC_FIELDCAP "Soil field capacity"

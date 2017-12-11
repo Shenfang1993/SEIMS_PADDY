@@ -125,7 +125,7 @@ int PER_STR::Execute()
 				cout<<"cell id:"<<i<<",the preco of" <<ly<< "layer in paddy:"<<m_perc[i][ly]<<endl;
 			}
 			*/
-		}
+		
     }	
     return 0;
 }

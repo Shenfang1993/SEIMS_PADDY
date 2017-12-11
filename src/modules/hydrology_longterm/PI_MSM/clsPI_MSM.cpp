@@ -166,10 +166,10 @@ bool clsPI_MSM::CheckInputData()
         throw ModelException(MID_PI_MSM, "CheckInputData",
                              "The minimum interception storage capacity can not be NULL.");
 
-    if (this->m_Pi_b > 1.5 || this->m_Pi_b < 0.5)
+    /*if (this->m_Pi_b > 1.5 || this->m_Pi_b < 0.5)
         throw ModelException(MID_PI_MSM, "CheckInputData",
                              "The interception storage capacity exponent can not be " + ValueToString(this->m_Pi_b) +
-                             ". It should between 0.5 and 1.5.");
+                             ". It should between 0.5 and 1.5.");*/
     if (this->m_Init_IS > 1.f || this->m_Init_IS < 0.f)
         throw ModelException(MID_PI_MSM, "CheckInputData",
                              "The Initial interception storage can not be " + ValueToString(this->m_Init_IS) +

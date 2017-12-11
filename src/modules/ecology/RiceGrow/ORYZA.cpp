@@ -919,6 +919,17 @@ int ORYZA::Execute()
 			}
 			else m_cropsta[i] = 4.f;
 		}
+		if (i == 70){
+			ofstream fout;
+			fout.open("j:\\dvs.txt", ios::app);
+			fout << m_dvs[70] << "\n";
+			fout << flush;
+			fout.close();
+		}
+		
+		/*if (i == 70){
+			cout <<"dvs:" << m_dvs[i] << endl;
+		}*/
 	}
 	return true;
 }

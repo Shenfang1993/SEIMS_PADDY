@@ -58,7 +58,7 @@ MGTOpt_SWAT::MGTOpt_SWAT(void) : m_nCells(-1), m_nSub(-1), m_soilLayers(-1),
         /// Release or impound operation
                                  m_impoundTriger(NULL), m_potVol(NULL), m_potVolMax(NULL),m_potVolLow(NULL),
 								 m_sol_fc(NULL), m_sol_sat(NULL), m_soilStorage(NULL), m_soilStorageProfile(NULL),
-								 m_potNo3(NULL), m_potNH4(NULL), m_potSolP(NULL),
+								 m_potNo3(NULL), m_potNH4(NULL), m_potSolP(NULL), m_potVolUp(NULL),
 		/// CENTURY C/N cycling related variables
 								m_sol_HSN(NULL), m_sol_LM(NULL), m_sol_LMC(NULL), m_sol_LMN(NULL), m_sol_LSC(NULL), 
 								m_sol_LSN(NULL), m_sol_LS(NULL), m_sol_LSL(NULL), m_sol_LSLC(NULL), m_sol_LSLNC(NULL),
@@ -67,7 +67,7 @@ MGTOpt_SWAT::MGTOpt_SWAT(void) : m_nCells(-1), m_nSub(-1), m_soilLayers(-1),
                                  m_doneOpSequence(NULL),
 								 m_initialized(false),
         /// rice related variables
-								 m_cropsta(NULL), m_nplsb(NODATA_VALUE), m_lape(NODATA_VALUE)
+								 m_cropsta(NULL), m_nplsb(NODATA_VALUE), m_lape(NODATA_VALUE), m_dvs(NULL), m_wrr(NULL)
 								 
 {
 }
@@ -170,6 +170,7 @@ MGTOpt_SWAT::~MGTOpt_SWAT(void)
 	if (m_impoundTriger !=NULL) Release1DArray(m_impoundTriger);
 	if (m_potVolMax != NULL) Release1DArray(m_potVolMax);
 	if (m_potVolLow != NULL) Release1DArray(m_potVolLow);
+	if (m_potVolUp != NULL) Release1DArray(m_potVolUp);
 }
 
 void MGTOpt_SWAT::SetValue(const char *key, float data)
@@ -260,6 +261,8 @@ void MGTOpt_SWAT::Set1DData(const char *key, int n, float *data)
 	else if (StringMatch(sk, VAR_SOL_SW)) m_soilStorageProfile = data;
 	/// rice
 	else if (StringMatch(sk, VAR_CROPSTA)) m_cropsta = data;
+	else if (StringMatch(sk, VAR_DVS)) { m_dvs = data; }
+	else if (StringMatch(sk, VAR_WRR)) { m_wrr = data; }
     else
         throw ModelException(MID_PLTMGT_SWAT, "Set1DData", "Parameter " + sk + " does not exist.");
 }
@@ -574,49 +577,74 @@ bool MGTOpt_SWAT::GetOperationCode(int i, int &factoryID, vector<int> &nOps)
 	else
 		nextSeq = curSeq + 1;
 	int opCode = tmpOpSeqences[nextSeq];
+
 	// figure out the nextSeq is satisfied or not.
 	if (tmpOperations.find(opCode) != tmpOperations.end())
 	{
 		PlantManagementOperation *tmpOperation = tmpOperations.at(opCode);
         /// *seqIter is calculated by: seqNo. * 1000 + operationCode
-        bool dateDepent = false, huscDepent = false;
-        /// If operation applied date (month and day) are defined
-		if (tmpOperation->GetYear() != 0 && tmpOperation->GetMonth() != 0 && tmpOperation->GetDay() != 0)
-        {
-            struct tm dateInfo;
-            LocalTime(m_date, &dateInfo);
-            if (dateInfo.tm_year == (tmpOperation->GetYear() - 1900.f) &&
-				dateInfo.tm_mon == tmpOperation->GetMonth() &&
-                dateInfo.tm_mday == tmpOperation->GetDay())
-                dateDepent = true;
-        }
-        /// If husc is defined
-        if (tmpOperation->GetHUFraction() >= 0.f)
-        {
-            float aphu; /// fraction of total heat units accumulated
-			if (FloatEqual(m_dormFlag[i], 1.f))
+        bool dateDepent = false, huscDepent = false, dvsDepent = false;
+		/// If operation applied date (month and day) are defined
+		if (tmpOperation->GetMonth() != 0 && tmpOperation->GetDay() != 0) {
+			struct tm dateInfo;
+			LocalTime(m_date, &dateInfo);
+			dateInfo.tm_mon += 1;
+			if (dateInfo.tm_mon == tmpOperation->GetMonth() &&
+				dateInfo.tm_mday == tmpOperation->GetDay()) {
+					if (tmpOperation->GetYear() > 2){
+						tmpOperation->GetYear() -= 1900;
+						if (dateInfo.tm_yday == tmpOperation->GetYear()){
+							dateDepent = true;
+						}
+					}
+					else{ dateDepent = true; }             
+			}
+		}
+		/// If husc is defined
+		if (tmpOperation->GetHUFraction() > 0.f) {
+			float aphu; /// fraction of total heat units accumulated
+			if (FloatEqual(m_dormFlag[i], 1.f)) {
 				aphu = NODATA_VALUE;
-			else{
+			} else {
 				if (tmpOperation->UseBaseHUSC() && FloatEqual(m_igro[i], 0.f)) // use base hu
 				{
 					aphu = m_phuBase[i];
-					if (aphu >= tmpOperation->GetHUFraction())
+					if (aphu >= tmpOperation->GetHUFraction()) {
 						huscDepent = true;
-				}
-				else{ // use accumulated plant hu
+					}
+				} else { // use accumulated plant hu
 					aphu = m_phuAcc[i];
-					if (aphu >= tmpOperation->GetHUFraction())
+					if (aphu >= tmpOperation->GetHUFraction()) {
 						huscDepent = true;
+					}
 				}
 			}
-        }
-        /// The operation will be applied either date or HUSC are satisfied,
-        /// and also in case of repeated run
-		if (dateDepent || huscDepent)
-        {
-            nOps.push_back(opCode);
-            m_doneOpSequence[i] = nextSeq; /// update value
-        }
+		}
+		/// if dvs is defined
+		if (tmpOperation->GetDVS() > 0.f){
+			if (m_dvs[i] >= tmpOperation->GetDVS()){
+				dvsDepent = true;
+			}
+		}
+		if (huscDepent == true && i == 70){
+			struct tm dateInfo;
+			LocalTime(m_date, &dateInfo);
+			dateInfo.tm_mon += 1;
+			cout << "date:" << dateInfo.tm_mon << "-" << dateInfo.tm_mday << endl;
+		}
+		if (dvsDepent == true && i == 70){
+			struct tm dateInfo;
+			LocalTime(m_date, &dateInfo);
+			dateInfo.tm_mon += 1;
+			cout << "date:" << dateInfo.tm_mon << "-" << dateInfo.tm_mday << endl;
+		}
+		
+		/// The operation will be applied either date or HUSC are satisfied,
+		/// and also in case of repeated run
+		if (dateDepent || huscDepent || dvsDepent) {
+			nOps.push_back(opCode);
+			m_doneOpSequence[i] = nextSeq; /// update value
+		}
     }
     if (nOps.empty()) return false;
     return true;
@@ -743,6 +771,7 @@ void MGTOpt_SWAT::ExecuteRiceHarvestOperation(int i, int &factoryID, int nOp)
 	m_plantP[i] = 0.f;
 	m_frStrsWa[i] = 1.f;
 	m_LAIDay[i] = 0.f;
+	m_cropsta[i] = 0.f;
 	Release1DArray(rtfr);
 }
 
@@ -1823,6 +1852,7 @@ void MGTOpt_SWAT::ExecuteReleaseImpoundOperation(int i, int &factoryID, int nOp)
 	/// paddy rice module should be added!
 	m_potVolMax[i] = curOperation->MaxDepth();
 	m_potVolLow[i] = curOperation->LowDepth();
+	m_potVolUp[i] = curOperation->UpDepth();
 	if (FloatEqual(m_impoundTriger[i], 0.f))
 	{
 		/// Currently, add pothole volume (mm) to the max depth directly (in case of infiltration).
@@ -1881,8 +1911,9 @@ void MGTOpt_SWAT::ScheduledManagement(int cellIdx, int &factoryID, int nOp)
     {
         case BMP_PLTOP_Plant:
 			/*if (landuse_id == 33) ExecuteRicePlantOperation(cellIdx,factoryID,nOp);
-            else ExecutePlantOperation(cellIdx, factoryID, nOp);		*/
-            ExecutePlantOperation(cellIdx, factoryID, nOp);
+            else ExecutePlantOperation(cellIdx, factoryID, nOp);*/
+			ExecuteRicePlantOperation(cellIdx,factoryID,nOp);
+            //ExecutePlantOperation(cellIdx, factoryID, nOp);
 			break;
         case BMP_PLTOP_Irrigation:
             ExecuteIrrigationOperation(cellIdx, factoryID, nOp);
@@ -1894,9 +1925,9 @@ void MGTOpt_SWAT::ScheduledManagement(int cellIdx, int &factoryID, int nOp)
             ExecutePesticideOperation(cellIdx, factoryID, nOp);
             break;
         case BMP_PLTOP_HarvestKill:
-			/*if (landuse_id == 33) ExecuteRiceHarvestOperation(cellIdx, factoryID, nOp);
-			else ExecuteHarvestKillOperation(cellIdx, factoryID, nOp);		*/
-            ExecuteHarvestKillOperation(cellIdx, factoryID, nOp);
+			if (landuse_id == 33) ExecuteRiceHarvestOperation(cellIdx, factoryID, nOp);
+			else ExecuteHarvestKillOperation(cellIdx, factoryID, nOp);		
+            //ExecuteHarvestKillOperation(cellIdx, factoryID, nOp);
 			break;
         case BMP_PLTOP_Tillage:
             ExecuteTillageOperation(cellIdx, factoryID, nOp);
@@ -2025,6 +2056,7 @@ void MGTOpt_SWAT::Get1DData(const char *key, int *n, float **data)
     else if (StringMatch(sk, VAR_IMPOUND_TRIG)) *data = m_impoundTriger;
 	else if (StringMatch(sk, VAR_POT_VOLMAXMM)) *data = m_potVolMax;
 	else if (StringMatch(sk, VAR_POT_VOLLOWMM)) *data = m_potVolLow;
+	else if (StringMatch(sk, VAR_POT_VOLUPMM)) *data = m_potVolUp;
 	/// tillage operation of CENTURY model
 	else if (StringMatch(sk, VAR_TILLAGE_DAYS)) *data = m_tillage_days;
 	else if (StringMatch(sk, VAR_TILLAGE_DEPTH)) *data = m_tillage_depth;
@@ -2113,6 +2145,7 @@ void MGTOpt_SWAT::initialOutputs()
 		if (m_impoundTriger == NULL) Initialize1DArray(m_nCells, m_impoundTriger, 1.f);
 		if (m_potVolMax == NULL) Initialize1DArray(m_nCells, m_potVolMax, 0.f);
 		if (m_potVolLow == NULL) Initialize1DArray(m_nCells, m_potVolLow, 0.f);
+		if (m_potVolUp == NULL) Initialize1DArray(m_nCells, m_potVolUp, 0.f);
 	}
 	/// tillage
 	if (find(definedMgtCodes.begin(), definedMgtCodes.end(), BMP_PLTOP_Tillage) != definedMgtCodes.end())

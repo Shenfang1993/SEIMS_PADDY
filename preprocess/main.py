@@ -27,14 +27,14 @@ if __name__ == "__main__":
     # # Update SQLite Parameters.db3 database
     reConstructSQLiteDB()
     # # # Climate Data
-    # SitesMList, SitesPList = ImportHydroClimateSitesInfo()
-    # ImportDailyMeteoData(SitesMList)
-    # ImportDailyPrecData(SitesPList)
+    SitesMList, SitesPList = ImportHydroClimateSitesInfo()
+    ImportDailyMeteoData(SitesMList)
+    ImportDailyPrecData(SitesPList)
     # # # Spatial Data derived from DEM
     SubbasinDelineation()
     # # # Measurement Data, such as discharge, sediment yield.
-    # ImportMeasurementData()
+    ImportMeasurementData()
     # # # Extract parameters from landuse, soil properties etc.
-    # ExtractParameters()
+    ExtractParameters()
     # # Import to MongoDB database
-    # BuildMongoDB()
+    BuildMongoDB()

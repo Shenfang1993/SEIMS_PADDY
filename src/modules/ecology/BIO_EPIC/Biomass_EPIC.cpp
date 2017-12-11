@@ -911,8 +911,8 @@ int Biomass_EPIC::Execute()
 		/// reWrite from plantmod.f of SWAT
         /// calculate residue on soil surface for current day
         m_sol_cov[i] = max(0.8f * m_biomass[i] + m_sol_rsd[i][0], 0.f);
-        //if (FloatEqual(m_igro[i], 1.f) && FloatEqual(m_cropsta[i], 0.f))      /// land cover growing,rice is out
-        if (FloatEqual(m_igro[i], 1.f))
+        if (FloatEqual(m_igro[i], 1.f) && FloatEqual(m_cropsta[i], 0.f))      /// land cover growing,rice is out
+        //if (FloatEqual(m_igro[i], 1.f))
 		{
             DistributePlantET(i);                  /// swu.f
             if (FloatEqual(m_dormFlag[i], 0.f))    /// plant will not undergo stress if dormant

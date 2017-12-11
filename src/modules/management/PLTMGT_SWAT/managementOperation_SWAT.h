@@ -148,6 +148,8 @@ private:
     float *m_wtrStrsYF;
     /// the leaf area indices for day i
     float *m_LAIDay;
+	/// Development stage of the crop
+	float *m_dvs;
     /// phu base
     float *m_phuBase;
     /// phu accumulated
@@ -378,8 +380,10 @@ private:
 	float *m_potVol;
 	/// maximum volume of water stored in the depression/impounded area, mm
 	float *m_potVolMax;
-	/// low depth ...., mm
+	/// min fit depth ...., mm
 	float *m_potVolLow;
+	/// max fit depth ...., mm
+	float *m_potVolUp;
 	/// no3 amount kg
 	float *m_potNo3;
 	/// nh4 amount kg
