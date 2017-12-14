@@ -41,6 +41,10 @@ private:
     float **m_soilThick;
     /// time step
     int m_dt;
+	/// landuse
+	float *m_landuse;
+	/// excess precipitation calculated in the infiltration module
+	float *m_pe;
     /// valid cells number
     int m_nCells;
     /// threshold soil freezing temperature

@@ -142,6 +142,8 @@ int SUR_MR::Execute()
         //    hWater = m_pNet[i] + snowMelt + m_sd[i];
         float hWater = 0.f;
 		hWater = m_pNet[i] + m_sd[i];
+		if (m_potVol != NULL)
+			hWater += m_potVol[i];
         if (hWater > 0.f)
         {
 			/// in the new version, sm is replaced by m_soilStorageProfile. By lj

@@ -14,8 +14,8 @@
 #include <omp.h>
 
 PER_STR::PER_STR(void) : m_nSoilLayers(-1), m_dt(-1), m_nCells(-1), m_frozenT(NODATA_VALUE),
-                         m_ks(NULL), m_sat(NULL), m_fc(NULL),
-						 m_soilThick(NULL), m_soilLayers(NULL), 
+                         m_ks(NULL), m_sat(NULL), m_fc(NULL), m_landuse(NULL),
+						 m_soilThick(NULL), m_soilLayers(NULL), m_pe(NULL),
                          m_infil(NULL), m_soilT(NULL), m_soilStorage(NULL),m_soilStorageProfile(NULL),
 						 m_potVol(NULL), m_surfQmm(NULL),
                          m_perc(NULL)
@@ -59,6 +59,12 @@ int PER_STR::Execute()
             if (excessWater > 1.e-5f)
             {
 				float maxPerc = maxSoilWater - fcSoilWater;
+
+				if ((int)m_landuse[i] == LANDUSE_ID_PADDY && j == (int)m_soilLayers[i] - 1){
+					// assume the max perc of paddy is 2 mm because of plow pan
+					maxPerc = 2.f;
+				}	
+
                 float tt = 3600.f * maxPerc  / m_ks[i][j]; // secs
                 m_perc[i][j] = excessWater * (1.f - exp(-m_dt / tt)); // secs
 
@@ -99,11 +105,10 @@ int PER_STR::Execute()
 							}
 							if (ly == 0 && ul_excess > 0.f)
 							{
-								// add ul_excess to depressional storage and then to surfq
-								if (m_potVol != NULL)
-									m_potVol[i] += ul_excess;
-								else
-									m_surfQmm[i] += ul_excess;
+								// add ul_excess to pe, which will be used to compute sd and sr in DEP_LINSLEY
+								// update infiltration by removing ul_excess
+								m_infil[i] -= ul_excess;
+								m_pe[i] += ul_excess;
 							}
 						}
 					}
@@ -152,6 +157,8 @@ void PER_STR::Set1DData(const char *key, int nRows, float *data)
 	else if (StringMatch(sk, VAR_SOL_SW)) m_soilStorageProfile = data;
 	else if (StringMatch(sk, VAR_POT_VOL)) m_potVol = data;
 	else if (StringMatch(sk, VAR_SURU)) m_surfQmm = data;
+	else if (StringMatch(sk, VAR_LANDUSE)) m_landuse = data;
+	else if (StringMatch(sk, VAR_EXCP)) m_pe = data;
     else
         throw ModelException(MID_PER_STR, "Set1DData","Parameter " + sk +" does not exist.");
 }
