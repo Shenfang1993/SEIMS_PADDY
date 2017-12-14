@@ -268,25 +268,24 @@ int IMP_SWAT::Execute()
 		for (int iCell = 1; iCell <= nCells; ++iCell)
 		{
 			int id = (int) m_routingLayers[iLayer][iCell]; // cell index
-			if (FloatEqual(m_impoundTrig[id], 0.f)) /// if impounding trigger on
+			if (FloatEqual(m_impoundTrig[id], 0.f)){ /// if impounding trigger on
 				potholeSimulate(id);
+			}
 			else{
 				releaseWater(id);
 			}
-			if(id == 70){
+			/*if(id == 70){
 				ofstream fout;
 				fout.open("j:\\pot.txt", ios::app);
 				fout << m_potVol[70] << "\t" << m_potVolMin[70] << "\n";
 				fout << flush;
 				fout.close();
-			}
+			}*/
 		}
 	}
 	
 	
 	/// reCalculate the surface runoff, sediment, nutrient etc. that into the channel
-	// cout<<"pre surq no3 to ch: "<<m_surNO3ToCh[12]<<endl;
-	// cout<<"pre surfq to ch: "<<m_surfqToCh[12]<<", orgp to ch: "<<m_sedOrgPToCh[12]<<endl;
 #pragma omp parallel for
 	for (int i = 0; i < m_subbasinNum + 1; i++)
 	{
@@ -301,19 +300,7 @@ int IMP_SWAT::Execute()
 		m_sedMinPAToCh[i] = 0.f;
 		m_sedMinPSToCh[i] = 0.f;
 	}
-	// cout<<"final orgp: "<<m_sedOrgP[46364]<<endl;
-	// cout<<"final surq no3: "<<m_surqNo3[46364]<<endl;
-	//float maxno3 = -1.f;
-	//int idx = -1;
-	//for (int i = 0; i < m_nCells; i++)
-	//{
-	//	if (m_surqNo3[i] > maxno3)
-	//	{
-	//		maxno3 = m_surqNo3[i];
-	//		idx = i;
-	//	}
-	//}
-	//cout<<"maximum no3 id: "<<idx<<endl;
+	
 	float maxsedorgp = -1.f;
 	int idx = -1;
 	for (int i = 0; i < m_nCells; i++)
@@ -324,7 +311,7 @@ int IMP_SWAT::Execute()
 			idx = i;
 		}
 	}
-	// cout<<"maximum sedorgp id: "<<idx<< ", surfq: " <<m_surfaceRunoff[idx]<<", sedorgp: "<<m_sedOrgP[idx]<<endl;
+	
 #pragma omp parallel for
 	
 	for (int i = 0; i < m_nCells; i++)
@@ -356,7 +343,7 @@ int IMP_SWAT::Execute()
 		m_sedMinPAToCh[0] += m_sedMinPAToCh[i];
 		m_sedMinPSToCh[0] += m_sedMinPSToCh[i];
 	}
-	//cout<<", new: "<<m_surNO3ToCh[5]<<endl;
+	
     return true;
 }
 

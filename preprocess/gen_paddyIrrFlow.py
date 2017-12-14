@@ -5,8 +5,12 @@
 
 import os
 import math
+import numpy
+import sqlite3
 from util import *
-
+from config import *
+from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure
 
 def GetValueByRowCol(row, col, nRows, nCols, data):
     if row < 0 or row >= nRows or col < 0 or col >= nCols:
@@ -31,6 +35,7 @@ def find_neighbour_pond(dem, landuse, subbasin, pond):
     landuse = gdal.Open(landuse)
     band_landuse = landuse.GetRasterBand(1)
     data_landuse = band_landuse.ReadAsArray()
+
     subbasin = gdal.Open(subbasin)
     band_subbasin = subbasin.GetRasterBand(1)
     data_subbasin = band_subbasin.ReadAsArray()
@@ -38,8 +43,7 @@ def find_neighbour_pond(dem, landuse, subbasin, pond):
     pond = gdal.Open(pond)
     band_pond = pond.GetRasterBand(1)
     data_pond = band_pond.ReadAsArray()
-    # xsize1 = band_landuse.XSize
-    # ysize1 = band_landuse.YSize
+
     maxLength = 1000.
     num = int(maxLength / cell_width / 2.)
     nCells = []
@@ -63,14 +67,34 @@ def find_neighbour_pond(dem, landuse, subbasin, pond):
                         pond_id = min(dic, key=lambda x: dic[x])
                     else:
                         pond_id = DEFAULT_NODATA
-                    print cell_index,len(nCells) - 1,data_landuse[i][j],pond_id,reach_id
+                    # print cell_index,len(nCells) - 1,data_landuse[i][j],pond_id,reach_id
 
+                    cell_id = len(nCells) - 1
+                    flow_table.append([cell_id, pond_id,reach_id])
+    f = open(txtName,'a')
+    for i in range(len(flow_table)):
+        for j in range(3):
+            f.write(str(flow_table[i][j]) + '\t')
+        f.write("\n")
+    f.close
 
-                # print reach_id
-    # print len(nCells)
+def ImportPaddyPondFlow(sqlite_file, db):
+    # delete if existed, create if not existed
+    cList = db.collection_names()
+    if not StringInList(DB_TAB_PADDYPONDFLOW.upper(), cList):
+        db.create_collection(DB_TAB_PADDYPONDFLOW.upper())
+    else:
+        db.drop_collection(DB_TAB_PADDYPONDFLOW.upper())
+    # print cList
+    dataItems = ReadDataItemsFromTxt(txtName)
+    for id in range(len(dataItems)):
+        dic = {}
+        dic[PADDYPONDFLOW_PADDYID.upper()] = dataItems[id][0]
+        dic[PADDYPONDFLOW_PONDID.upper()] = dataItems[id][1]
+        dic[PADDYPONDFLOW_REACHID.upper()] = dataItems[id][2]
+        db[DB_TAB_PADDYPONDFLOW.upper()].find_one_and_replace(dic, dic, dic, dic, upsert=True)
 
-    # print xsize1,ysize1
-    # print data[0]
+    print 'Paddy pond flow tables are imported.'
 
 if __name__ == '__main__':
     path = r"J:\seims_paddy\paddyIrr"
@@ -78,4 +102,19 @@ if __name__ == '__main__':
     landuse = path +  os.sep + "landuse.tif"
     subbasin = path +  os.sep + "SUBBASIN.tif"
     pond = path +  os.sep + "pond.tif"
-    find_neighbour_pond(dem, landuse, subbasin , pond)
+    txtName = path + os.sep + "paddy_pond_flow.txt"
+    # find_neighbour_pond(dem, landuse, subbasin, pond)
+
+    # Load Configuration file
+    LoadConfiguration(GetINIfile())
+    import sys
+    try:
+        conn = MongoClient(HOSTNAME, PORT)
+    except ConnectionFailure, e:
+        sys.stderr.write("Could not connect to MongoDB: %s" % e)
+        sys.exit(1)
+    db = conn[SpatialDBName]
+
+    from txt2db3 import reConstructSQLiteDB
+    reConstructSQLiteDB()
+    ImportPaddyPondFlow(TXT_DB_DIR + os.sep + sqliteFile, db)

@@ -403,6 +403,8 @@
 #define MCLSDESC_PADDY								"Paddy simulations"
 #define MID_IMP_SWAT								"IMP_SWAT"
 #define MDESC_IMP_SWAT								"SWAT method, simulates depressional areas that do not drain to the stream network (pothole) and impounded areas such as rice paddies"
+#define MID_POND                                    "POND"
+#define MDESC_POND                                  "SWAT method, simulates the pond areas"
 /// Groundwater
 #define MCLS_GW                                        "Groundwater"
 #define MCLSDESC_GW                            "Calculate groundwater balance and baseflow."
