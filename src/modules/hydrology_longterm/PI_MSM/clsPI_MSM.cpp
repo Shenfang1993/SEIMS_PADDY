@@ -52,6 +52,8 @@ void clsPI_MSM::SetValue(const char *key, float data)
     if (StringMatch(s, VAR_PI_B)) this->m_Pi_b = data;
     else if (StringMatch(s, VAR_INIT_IS)) this->m_Init_IS = data;
     else if (StringMatch(s, VAR_OMP_THREADNUM)) omp_set_num_threads((int) data);
+	else if (StringMatch(s, VAR_PCP2CANFR_PR)) {this->m_pcp2canfr_pr = data; }
+	else if (StringMatch(s, VAR_EMBNKFR_PR)) {this->m_embnkfr_pr = data; }
     else
         throw ModelException(MID_PI_MSM, "SetValue", "Parameter " + s + " does not exist.");
 }
@@ -110,20 +112,22 @@ int clsPI_MSM::Execute()
             if (availableSpace < 0)
                 availableSpace = 0.f;
 
-            if (availableSpace < m_P[i])
+            if (availableSpace < m_P[i]){
                 m_interceptionLoss[i] = availableSpace;
-            else
-                m_interceptionLoss[i] = m_P[i];
+			    //if the cell is paddy, by default 15% part of pcp will be allocated to embankment area
+			    if (FloatEqual((int)m_landuse[i], LANDUSE_ID_PADDY)){
+					//water added into ditches from low embankment, should be added to somewhere else.
+				    float pcp2canal = m_P[i] * m_pcp2canfr_pr * m_embnkfr_pr;
 
-            //net precipitation
-			//if the cell is paddy, 15% part of pcp will be allocated to embankment area
-			if(FloatEqual(m_landuse[i],LANDUSE_ID_PADDY)){
-				m_interceptionLoss[i] = m_interceptionLoss[i] * (1.f - m_embnkfr_pr);
-				m_netPrecipitation[i] = m_P[i] - m_interceptionLoss[i] - m_P[i] * m_pcp2canfr_pr * m_embnkfr_pr;
+				    m_netPrecipitation[i] = m_P[i] - m_interceptionLoss[i] - pcp2canal;
+			    }
+			    else{
+					m_netPrecipitation[i] = m_P[i] - m_interceptionLoss[i];
+			    }
 			}
-
-			else{
-				m_netPrecipitation[i] = m_P[i] - m_interceptionLoss[i];
+            else{
+                m_interceptionLoss[i] = m_P[i];
+			    m_netPrecipitation[i] = 0.f;
 			}
             
             m_st[i] += m_interceptionLoss[i];
