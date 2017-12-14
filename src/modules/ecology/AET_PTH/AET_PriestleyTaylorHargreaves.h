@@ -72,6 +72,14 @@ private:
     float **m_soilStorage;
 	/// soil water storage in soil profile (mm)
 	float *m_soilStorageProfile;
+	/// landuse
+	float *m_landuse;
+	/// Crop stage,0=before sowing; 1=sowing; 2=in seedbed; 3=day of transplanting; 4=main growth period, should be get value at PLTMGT_SWAT
+	float *m_cropsta;
+	/// impounding trigger
+	float *m_impoundTrig;
+	/// pothole volume, mm
+	float *m_potVol;
     /// add output variables
 
     /// maximum amount of transpiration (plant et)  that can occur on current day in HRU, ep_max in SWAT
@@ -117,5 +125,11 @@ private:
 
 	//! initialize outputs
 	void initialOutputs();
+
+	// compute soil evaporation and crop transpiration by SWAT method
+	float AET_PT_H::SWAT_maxPET(float pet, int i);
+
+	// compute soil evaporation and crop transpiration by ORYZA method
+	float AET_PT_H::ORYZA_maxPET(float pet, int i);
 };
 

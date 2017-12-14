@@ -413,9 +413,9 @@ void IMP_SWAT::potholeSimulate(int id)
 	/* compute surface area of pothole
 	 * SWAT assuming a cone shape, ha
 	 * i.e., potholeSurfaceArea(id);
-	 * However, currently, we assume it is cell area * ги1 - fr of embankment)
+	 * However, currently, we assume all the grid-cell is covered by paddy rice
 	 */
-	m_potSurfaceArea[id] = m_cellArea * (1 - m_embnkfr_pr);
+	m_potSurfaceArea[id] = m_cellArea;
 	//potvol_ini = m_potVol[id];
 	//potsa_ini = m_potSurfaceArea[id];
 
