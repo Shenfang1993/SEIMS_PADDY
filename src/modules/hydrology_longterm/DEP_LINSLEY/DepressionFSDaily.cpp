@@ -16,7 +16,7 @@
 #include <omp.h>
 
 DepressionFSDaily::DepressionFSDaily(void) : m_nCells(-1),m_depCo(NODATA_VALUE),
-                                             m_depCap(NULL), 
+                                             m_depCap(NULL), m_pondVol(NULL),
 											 m_pet(NULL), m_ei(NULL), m_pe(NULL),
                                              m_sd(NULL), m_ed(NULL), m_sr(NULL),
 											 m_impoundTriger(NULL),m_potVol(NULL),
@@ -88,7 +88,14 @@ int DepressionFSDaily::Execute()
     {
         //////////////////////////////////////////////////////////////////////////
         // runoff
-        if (m_depCap[i] < 0.001f)
+		// for pond, the pcp will be stored
+		if (FloatEqual(m_landuse[i],LANDUSE_ID_POND)){
+			if (m_pondVol != NULL){
+				m_pondVol[i] = m_pe[i];
+				m_sd[i] = 0.f;
+			}			
+		}
+        if (m_depCap[i] < 0.001f && (!FloatEqual(m_landuse[i],LANDUSE_ID_POND)))
         {
             m_sr[i] = m_pe[i];
             m_sd[i] = 0.f;
@@ -198,6 +205,7 @@ void DepressionFSDaily::Set1DData(const char *key, int n, float *data)
 		m_P = data;
 	else if (StringMatch(sk, VAR_LANDUSE))
 		m_landuse = data;
+	else if (StringMatch(sk, VAR_POND_VOL)) { m_pondVol = data; }
     else
         throw ModelException(MID_DEP_LINSLEY, "Set1DData", "Parameter " + sk+" does not exist.");
 }

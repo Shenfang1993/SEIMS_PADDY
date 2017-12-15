@@ -334,6 +334,7 @@
 #define LANDUSE_PARAM_DSC_ST12_IDX  49
 
 #define LANDUSE_ID_WATR 18
+#define LANDUSE_ID_POND 200
 #define LANDUSE_ID_PADDY 33
 
 /// irrigation source code:

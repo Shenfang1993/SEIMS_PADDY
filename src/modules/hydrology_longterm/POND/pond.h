@@ -27,11 +27,26 @@ private:
 	float *m_pondVol;
 	/// max pond depth
 	float *m_pondVolMax;
+	/// 
+	float *m_surfaceAreaEM;
+	///
+	float *m_surfaceAreaPR;
+	///
+	float *m_volEM;
+	///
+	float *m_volPR;
+	///
+	float *m_pondSurfaceArea;
+	///
+	float m_evap_coe;
+	///
+	float *m_pondEvap;
+	///
+	float *m_pondSeep;
 	/// conversion factor (mm/ha => m^3)
 	float m_cnv; 
     /// valid cells number
-    int m_nCells;
-	
+    int m_nCells;	
 	/// cell width, m
 	float m_cellWidth;
 	/// cell area, ha

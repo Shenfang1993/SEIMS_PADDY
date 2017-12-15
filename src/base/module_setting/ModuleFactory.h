@@ -28,6 +28,7 @@
 #include "MongoUtil.h"
 #include "util.h"
 #include "utils.h"
+#include "clsPond.h"
 
 using namespace std;
 using namespace MainBMP;
@@ -145,6 +146,8 @@ private:
     Scenario *m_scenario;
     //! Reaches information
     clsReaches *m_reaches;
+
+	clsPonds *m_ponds;
 	//! Subbasins information
 	clsSubbasins *m_subbasins;
 
@@ -217,6 +220,9 @@ private:
 
     //! Set Reaches information
     void SetReaches(SimulationModule *pModule);
+
+	//! Set Ponds information
+	void SetPonds(SimulationModule *pModule);
 
 	//! Set Subbasins information
 	void SetSubbasins(SimulationModule *pModule);

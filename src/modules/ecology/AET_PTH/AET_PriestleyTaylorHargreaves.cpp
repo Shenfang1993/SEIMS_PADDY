@@ -293,20 +293,16 @@ int AET_PT_H::Execute()
             m_soilStorageProfile[i] = 0.f;
             for (int ly = 0; ly < (int)m_nSoilLayers[i]; ly++)
                 m_soilStorageProfile[i] += m_soilStorage[i][ly];
-            /// calculate actual amount of evaporation from soil
-			//if (esleft != esleft || es_max != es_max)
-			//	cout<<"esleft: "<<esleft<<", es_max: "<<es_max<<endl;
+            /// calculate actual amount of evaporation from soil / water
 			if (es_max > esleft)
 				m_soilESDay[i] = es_max - esleft;
 			else
 				m_soilESDay[i] = 0.f;
         }
     }
-	//cout<<"AET_PTH, cell id 5878, sol_no3[0]: "<<m_solNo3[5878][0]<<endl;
     return true;
 }
 
-//m_ppt(NULL), m_solAET(NULL), m_no3Up(NODATA), m_soilStorageProfile(NULL)
 void AET_PT_H::GetValue(const char *key, float *value)
 {
 	initialOutputs();

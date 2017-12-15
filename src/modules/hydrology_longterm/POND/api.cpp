@@ -91,20 +91,7 @@ extern "C" SEIMS_MODULE_API const char *MetadataInformation()
 	mdi.AddInput(VAR_SEDMINPS_TOCH, UNIT_KG, DESC_SEDMINPS_CH, Source_Module, DT_Array1D);
 	
 	/// set the output variables
-	mdi.AddOutput(VAR_POT_NO3, UNIT_KG, DESC_POT_NO3, DT_Raster1D);
-	mdi.AddOutput(VAR_POT_NH4, UNIT_KG, DESC_POT_NH4, DT_Raster1D);
-	mdi.AddOutput(VAR_POT_ORGN, UNIT_KG, DESC_POT_ORGN, DT_Raster1D);
-	mdi.AddOutput(VAR_POT_SOLP, UNIT_PER_DAY, DESC_POT_SOLP, DT_Raster1D);
-	mdi.AddOutput(VAR_POT_ORGP, UNIT_KG, DESC_POT_ORGP, DT_Raster1D);
-	mdi.AddOutput(VAR_POT_AMINP, UNIT_KG, DESC_POT_AMINP, DT_Raster1D);
-	mdi.AddOutput(VAR_POT_SMINP, UNIT_KG, DESC_POT_SMINP, DT_Raster1D);
-	mdi.AddOutput(VAR_POT_SED, UNIT_KG, DESC_POT_SED, DT_Raster1D);
-	mdi.AddOutput(VAR_POT_VOL, UNIT_DEPTH_MM, DESC_POT_VOL, DT_Raster1D);
-	//mdi.AddOutput(VAR_POT_FLOWIN, UNIT_VOL_M3, DESC_POT_FLOWIN, DT_Raster1D);
-	//mdi.AddOutput(VAR_POT_FLOWOUT, UNIT_VOL_M3, DESC_POT_FLOWOUT, DT_Raster1D);
-	//mdi.AddOutput(VAR_POT_SEDIN, UNIT_KG, DESC_POT_SEDIN, DT_Raster1D);
-	//mdi.AddOutput(VAR_POT_SEDOUT, UNIT_KG, DESC_POT_SEDOUT, DT_Raster1D);
-	mdi.AddOutput(VAR_POT_SA, UNIT_AREA_HA, DESC_POT_SA, DT_Raster1D);
+	mdi.AddOutput(VAR_POND_VOL, UNIT_DEPTH_MM, DESC_POND_VOL, DT_Raster1D);
 
     /// write out the XML file.
     res = mdi.GetXMLDocument();

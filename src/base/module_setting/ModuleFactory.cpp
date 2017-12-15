@@ -427,6 +427,7 @@ dimensionTypes ModuleFactory::MatchType(string strType)
     if (StringMatch(strType, Type_Raster2D)) typ = DT_Raster2D;
     if (StringMatch(strType, Type_Scenario)) typ = DT_Scenario;
     if (StringMatch(strType, Type_Reach)) typ = DT_Reach;
+	if (StringMatch(strType, Type_Pond)) typ = DT_Pond;
 	if (StringMatch(strType, Type_Subbasin)) typ = DT_Subbasin;
     //if (StringMatch(strType, Type_SiteInformation)) typ = DT_SiteInformation;
     //if (StringMatch(strType, Type_LapseRateArray)) typ = DT_LapseRateArray;
@@ -1007,6 +1008,9 @@ void ModuleFactory::SetData(string &dbName, int nSubbasin, SEIMSModuleSetting *s
 		case DT_Reach:
 			SetReaches(pModule);
 			break;
+		case DT_Pond:
+			SetPonds(pModule);
+			break;
 		case DT_Subbasin:
 			SetSubbasins(pModule);
 			break;
@@ -1371,6 +1375,15 @@ void ModuleFactory::SetReaches(SimulationModule *pModule)
         m_reaches = new clsReaches(m_conn, m_dbName, DB_TAB_REACH);
     pModule->SetReaches(m_reaches);
 }
+
+/// Added by shen fang, 2017-12-15
+void ModuleFactory::SetPonds(SimulationModule *pModule)
+{
+	if (NULL == m_ponds)
+		m_ponds = new clsPonds(m_conn, m_dbName, DB_TAB_POND);
+	pModule->SetPonds(m_ponds);
+}
+
 void ModuleFactory::AddMaskRaster(string maskName, clsRasterData<float> *maskData)
 {
 	if (m_rsMap.find(maskName) == m_rsMap.end()) // not loaded yet

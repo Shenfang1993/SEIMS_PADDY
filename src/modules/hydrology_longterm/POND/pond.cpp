@@ -7,7 +7,7 @@
 
 using namespace std;
 
-POND::POND(void) : m_npond(-1)
+POND::POND(void) : m_npond(-1), m_pondVolMax(NULL), m_pondVol(NULL)
 {
 	
 }
@@ -15,6 +15,7 @@ POND::POND(void) : m_npond(-1)
 
 POND::~POND(void)
 {
+	if (m_pondVol != NULL) Release1DArray(m_pondVol);
 }
 	
 
@@ -41,7 +42,11 @@ bool POND::CheckInputData()
 void POND::SetValue(const char *key, float value)
 {
 	string sk(key);
-	
+	if(StringMatch(sk, Tag_CellWidth)){
+		m_cellWidth = value;
+		m_cellArea = m_cellWidth * m_cellWidth * 1.e-4f; // m2 ==> ha
+		m_cnv = 10.f * m_cellArea; // mm/ha => m^3
+	}
 }
 
 void POND::Set1DData(const char *key, int n, float *data)
@@ -57,6 +62,11 @@ void POND::Set2DData(const char *key, int n, int col, float **data)
 
 void POND::initialOutputs()
 {
+	for (int i = 0; i < m_npond; i++){
+		//对每个pond的栅格单元的一些变量初始化
+		if (m_pondVolMax == NULL) Initialize1DArray(m_nCells, m_pondVolMax, 5.f);
+		if (m_pondVol == NULL) Initialize1DArray(m_nCells, m_pondVol, 3.f);
+	}
 	
 }
 
@@ -69,24 +79,6 @@ int POND::Execute()
 	for (int i = 0; i < m_npond; i++){
 
 	}
-
-//	for (int iLayer = 0; iLayer < m_nRoutingLayers; ++iLayer)
-//	{
-//		// There are not any flow relationship within each routing layer.
-//		// So parallelization can be done here.
-//		int nCells = (int) m_routingLayers[iLayer][0];
-//#pragma omp parallel for
-//		for (int iCell = 1; iCell <= nCells; ++iCell)
-//		{
-//			int id = (int) m_routingLayers[iLayer][iCell]; // cell index
-//			if (FloatEqual(m_impoundTrig[id], 0.f)){ /// if impounding trigger on
-//				potholeSimulate(id);
-//			}
-//			else{
-//				releaseWater(id);
-//			}
-//		}
-	//}
 	
     return true;
 }
@@ -98,24 +90,32 @@ void POND::pondSimulate(int id)
 
 	}
 
-	/// if no overflow, compute settling and losses, surface inlet tile
-	/// flow, evap, seepage, and redistribute soil water
+	/// m_pondSurfaceArea是整个pond的水面面积，而不是pond内某个栅格单元的面积
+	/// if no overflow
 	if (m_pondVol[id] > UTIL_ZERO){
+		/// compute evaporation from water surface
+		float pondevap = 10.f * m_evap_coe * m_pondSurfaceArea[id] * m_pet[id] / m_cnv; /// mm/hr*ha/240=m3/cnv=mm
+		pondevap = min(pondevap, m_potVol[id]);
+		m_pondVol[id] -= pondevap;
+		m_pondEvap[id] += pondevap;
 
+		/// calculate seepage into soil
+		float pondsep = m_ks[id][0] * m_pondSurfaceArea[id] * 240.f / m_cnv; /// mm/hr*ha/240=m3/cnv=mm
+		pondsep = min(pondsep, m_potVol[id]);
+		m_pondVol[id] -= pondsep;
+		m_pondSeep[id] += pondsep;
+		m_soilStorage[id][0] += pondsep; /// this will be handled in the next time step
 	}
 
 }
 
 void POND::pondSurfaceArea(int id)
 {
-	/// compute surface area assuming a cone shape, ha
-	float potVol_m3 = m_potVol[id] * m_cnv;
-	m_potSurfaceArea[id] = PI * pow((3.f * potVol_m3 / (PI * m_slope[id])), 0.6666f);
-	m_potSurfaceArea[id] /= 10000.f; /// convert to ha
-	if (m_potSurfaceArea[id] <= UTIL_ZERO)
-		m_potSurfaceArea[id] = 0.001f;
-	if (m_potSurfaceArea[id] > m_cellArea)
-		m_potSurfaceArea[id] = m_cellArea;
+	float pondVol_m3 = m_pondVol[id] * m_cnv;
+	float expsa = (log(m_surfaceAreaEM[id]) - log(m_surfaceAreaPR[id])) / (log(m_volEM[id]) - log(m_volPR[id]));
+	float coe_beta = pow(m_surfaceAreaEM[id] / m_volEM[id], expsa);
+	m_pondSurfaceArea[id] = coe_beta * pow(pondVol_m3, expsa);
+	
 }
 
 void POND::Get1DData(const char *key, int *n, float **data)

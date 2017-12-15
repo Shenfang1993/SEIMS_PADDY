@@ -91,6 +91,8 @@ enum dimensionTypes
             DT_Scenario = 7,
     /// Reach parameters
             DT_Reach = 8,
+    /// Pond parameters
+			DT_Pond = 10,
 	/// Subbasin instances
 			DT_Subbasin = 9
     ///// Lookup tables, TODO LJ

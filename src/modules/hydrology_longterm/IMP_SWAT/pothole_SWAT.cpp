@@ -270,6 +270,14 @@ int IMP_SWAT::Execute()
 			int id = (int) m_routingLayers[iLayer][iCell]; // cell index
 			if (FloatEqual(m_impoundTrig[id], 0.f)){ /// if impounding trigger on
 				potholeSimulate(id);
+				// force to auto-irrigation at the end of the day, added by SF.
+				if (m_potVol[id] < m_potVolMin[id])
+				{
+					/// the water need to auto-irrigation, the source are from nearst pond and subbasin reach 
+					float irrVol_m3 = (m_potVolUp[id] - m_potVol[id]) / 1000.f * m_cellWidth * m_cellWidth * (1.f - m_embnkfr_pr);
+					m_potVol[id] = m_potVolUp[id]; 
+					 
+				}
 			}
 			else{
 				releaseWater(id);
@@ -594,24 +602,6 @@ void IMP_SWAT::potholeSimulate(int id)
 		m_potSeep[id] += potsep;
 		m_soilStorage[id][0] += potsep; /// this will be handled in the next time step, added by LJ
 
-		///// force the soil water storage to field capacity
-		//for (int ly = 0; ly < (int)m_soilLayers[id]; ly++)
-		//{
-		//	float dep2cap = m_sol_sat[id][ly] - m_soilStorage[id][ly];
-		//	if (dep2cap > 0.f)
-		//	{
-		//		dep2cap = min(dep2cap, m_potVol[id]);
-		//		m_soilStorage[id][ly] += dep2cap;
-		//		m_potVol[id] -= dep2cap;
-		//	}
-		//}
-		//if (m_potVol[id] < m_potVolMin[id])
-		//	m_potVol[id] = m_potVolMin[id]; /// force to reach the lowest depth. 
-		///// recompute total soil water storage 
-		//m_soilStorageProfile[id] = 0.f;
-		//for (int ly = 0; ly < (int)m_soilLayers[id]; ly++)
-		//	m_soilStorageProfile[id] += m_soilStorage[id][ly];
-
 		/// compute evaporation from water surface
 		if (m_LAIDay[id] < m_evLAI)
 		{
@@ -740,11 +730,7 @@ void IMP_SWAT::potholeSimulate(int id)
 			m_potLag[id] -= lagloss;
 		}
 	}
-	// force to auto-irrigation at the end of the day, added by LJ.
-	if (m_potVol[id] < m_potVolMin[id])
-	{
-		m_potVol[id] = m_potVolUp[id]; 
-	}
+	
 	//potholeSurfaceArea(id);
 	m_surfaceRunoff[id] = qdayTmp;
 	//if (id == 46364)  /// dianbu 46364, dianbu2 1085

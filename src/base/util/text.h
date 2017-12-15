@@ -196,6 +196,7 @@
 #define DB_TAB_SITELIST            "SITELIST"
 #define DB_TAB_SCENARIO            "BMPDATABASE"
 #define DB_TAB_REACH            "REACHES"
+#define DB_TAB_POND              "PADDYPONDFLOW"
 #define DB_TAB_SPATIAL            "SPATIAL"  /// i.e., spatial.files
 #define DB_TAB_SITES            "SITES"
 #define DB_TAB_DATAVALUES        "DATA_VALUES" // hydroClimate data values
@@ -204,6 +205,8 @@
 #define DB_TAB_OUT_SPATIAL        "OUTPUT"
 #define DB_TAB_FILEIN            "FILE_IN"
 #define DB_TAB_FILEOUT            "FILE_OUT"
+/// Fields in DB_TAB_POND ///
+#define POND_PONDID               "PONDID"
 /// Fields in DB_TAB_REACH ///
 #define REACH_SUBBASIN            "SUBBASINID"
 #define REACH_NUMCELLS            "NUM_CELLS"
@@ -263,6 +266,7 @@
 
 #define Type_Scenario            "SCENARIO"
 #define Type_Reach                "REACH"
+#define Type_Pond                 "POND"
 #define Type_Subbasin			"SUBBASIN"
 //#define Type_LookupTable    "LOOKUPTABLE"
 //#define Type_LapseRateArray        "LAPSERATEARRAY"
@@ -930,6 +934,7 @@
 #define VAR_SOL_MN "sol_mn"
 #define VAR_SOL_MP "sol_mp"
 #define VAR_SOL_N "sol_N"
+#define VAR_POND_VOL "pond_vol"
 
 /// define rice related parameters
 #define VAR_CROPSTA "cropsta"
@@ -1665,6 +1670,7 @@
 #define DESC_SOL_MN "manure nitrogen in soil"
 #define DESC_SOL_MP "manure phosphorus in soil"
 #define DESC_SOL_N "soil organic nitrogen, include nitrogen in manure"
+#define DESC_POND_VOL "pond volumn"
 
 /// description of rice related parameters
 #define DESC_TBD "Base temperature for development"

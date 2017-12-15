@@ -15,6 +15,7 @@
 #include "Scenario.h"  /// added by LJ. 2016-6-14
 #include "clsReach.h"
 #include "clsSubbasin.h"
+#include "clsPond.h"
 
 using namespace std;
 using namespace MainBMP;
@@ -135,6 +136,12 @@ public:
     {
         throw ModelException("SimulationModule", "SetReaches", "Set reaches function is not implemented.");
     }
+
+	//! Set pointer of clsPonds class which contains all ponds information. 
+	virtual void SetPonds(clsPonds *)
+	{
+		throw ModelException("SimulationModule", "SetPonds", "Set ponds function is not implemented.");
+	}
 
 	//! Set pointer of clsSubbasins class which contains all subbasins information. Added by LJ, 2016-7-28
 	virtual void SetSubbasins(clsSubbasins *)

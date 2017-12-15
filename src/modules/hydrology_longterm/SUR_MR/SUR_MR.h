@@ -93,6 +93,10 @@ private:
     float *m_pNet;
     /// potential runoff coefficient
     float *m_runoffCo;
+	/// landuse
+	float *m_landuse;
+	/// pond volumn
+	float *m_pondVol;
 
     /// number of soil layers, i.e., the maximum soil layers of all soil types
     int m_nSoilLayers;

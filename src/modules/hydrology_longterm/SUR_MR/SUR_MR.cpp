@@ -7,7 +7,7 @@
 #include <omp.h>
 
 SUR_MR::SUR_MR(void) : m_nCells(-1), m_dt(-1), m_nSoilLayers(-1), m_tFrozen(NODATA_VALUE), 
-					   m_kRunoff(NODATA_VALUE),m_pMax(NODATA_VALUE),
+					   m_kRunoff(NODATA_VALUE),m_pMax(NODATA_VALUE), m_landuse(NULL), m_pondVol(NULL)
                        //m_tSnow(NODATA_VALUE), m_t0(NODATA_VALUE), m_snowAccu(NULL), m_snowMelt(NULL),
                        m_sFrozen(NODATA_VALUE), m_runoffCo(NULL), m_initSoilStorage(NULL), m_tMean(NULL), 
 					   // m_soilThick(NULL) ,m_fieldCap(NULL),m_wiltingPoint(NULL), m_porosity(NULL), 
@@ -124,38 +124,14 @@ int SUR_MR::Execute()
 #pragma omp parallel for
     for (int i = 0; i < m_nCells; i++)
     {
-		/// Snow melt should be considered in SnowMelt module, this may be redundant. By LJ
-        ////account for the effects of snow melt and soil temperature
-        //float t = 0.f, snowMelt = 0.f, snowAcc = 0.f, sd = 0.f;
-        //if (m_tMean != NULL) t = m_tMean[i];
-        //if (m_snowMelt != NULL)snowMelt = m_snowMelt[i];
-        //if (m_snowAccu != NULL)snowAcc = m_snowAccu[i];
-        //if (m_sd != NULL)sd = m_sd[i];
-
-        //// snow, without snow melt
-        //if (m_tMean[i] <= m_tSnow)
-        //    hWater = 0.0f;
-        //// rain on snow, no snow melt
-        //else if (m_tMean[i] > m_tSnow && m_tMean[i] <= m_t0 && snowAcc > m_pNet[i])
-        //    hWater = 0.0f;
-        //else
-        //    hWater = m_pNet[i] + snowMelt + m_sd[i];
         float hWater = 0.f;
 		hWater = m_pNet[i] + m_sd[i];
 		if (m_potVol != NULL)
 			hWater += m_potVol[i];
+		if (m_pondVol != NULL)
+			hWater += m_pondVol[i];
         if (hWater > 0.f)
         {
-			/// in the new version, sm is replaced by m_soilStorageProfile. By lj
-			/// por is replaced by m_sol_sumsat which is calculated by (sat - wp)
-            //float sm = 0.f, por = 0.f;
-            //for (int j = 0; j < (int)m_soilLayers[i]; j++)
-            //{
-            //    sm += m_soilStorage[i][j]; ///  mm H2O
-            //    por += m_porosity[i][j] * m_soilThick[i][j]; /// unit can be seen as mm H2O 
-            //}
-            // float smFraction = min(sm / por, 1.f);
-
 			/// update total soil water content
 			m_soilStorageProfile[i] = 0.f;
 			for (int ly = 0; ly < (int)m_soilLayers[i]; ly++){
@@ -173,7 +149,10 @@ int SUR_MR::Execute()
                 float alpha = m_kRunoff - (m_kRunoff - 1.f) * hWater / m_pMax;
                 if (hWater >= m_pMax)
                     alpha = 1.f;
-
+				// for pond, in normal case, it will not generate surface runoff
+				if ((int)m_landuse[i] == LANDUSE_ID_POND){
+					m_runoffCo[i] = 1.f;
+				}
                 //runoff percentage
                 float runoffPercentage;
                 if (m_runoffCo[i] > 0.99f)
@@ -184,25 +163,7 @@ int SUR_MR::Execute()
                 float surfq = hWater * runoffPercentage;
 				if (surfq > hWater) surfq = hWater;
                 m_infil[i] = hWater - surfq;
-                m_pe[i] = surfq;
-				
-				
-				/// TODO: Why calculate surfq first, rather than infiltration first?
-				///       I think we should calculate infiltration first, until saturation, 
-				///       then surface runoff should be calculated. By LJ.
-
-                // check the output data, In my view, we should avoid this situation to occur. By LJ.
-                //if (m_infil[i] != m_infil[i] || m_infil[i] < 0.f)
-                //{
-                //    //string datestr = getDate(&m_date);
-                //    ostringstream oss;
-                //    oss << "Cell id:" << i << "\tPrecipitation(mm) = " << m_pNet[i] << "\thwater = " << hWater
-                //    << "\tpercentage:" << runoffPercentage << "\tmoisture = " << sm
-                //    << "\tInfiltration(mm) = " << m_infil[i] << "\n";
-                //    throw ModelException(MID_SUR_MR, "Execute",
-                //                         "Output data error: infiltration is less than zero. Where:\n"
-                //                         + oss.str() + "Please contact the module developer. ");
-                //}
+                m_pe[i] = surfq;			
             }
         }
         else
@@ -213,27 +174,9 @@ int SUR_MR::Execute()
 		/// if m_infil > 0., m_soilStorage need to be updated here. By LJ, 2016-9-2
 		if (m_infil[i] > 0.f)
 		{
-			//if (m_potVol != NULL && m_potVol[i] > UTIL_ZERO)
-			//{
-			//	if (m_impoundTrig != NULL && FloatEqual(m_impoundTrig[i], 0.f))
-			//	{
-			//		m_potVol[i] += m_infil[i];
-			//		/// when impounded, set the maximum infiltration to 2 mm
-			//		if (m_potVol[i] > 2.f)
-			//			m_infil[i] = 2.f;
-			//		else
-			//			m_infil[i] = 0.f;
-			//		m_potVol[i] -= m_infil[i];
-			//	}
-			//	//else /// release operation should be considered in IMP_SWAT module
-			//	//	m_infil[i] += m_potVol[i];
-			//}
 			m_soilStorage[i][0] += m_infil[i];
 		}
-		//if (i == 200)
-		//{
-		//	cout<<"netRain: "<<m_pNet[i]<<", depStrg: "<<m_sd[i]<<", infil: "<<m_infil[i]<<", surfq: "<<m_pe[i]<<endl;
-		//}
+		
     }
     return 0;
 }
@@ -286,6 +229,8 @@ void SUR_MR::Set1DData(const char *key, int n, float *data)
 	else if (StringMatch(sk, VAR_SOL_SUMSAT))m_sol_sumsat = data;
 	else if (StringMatch(sk, VAR_POT_VOL)) m_potVol = data;
 	else if (StringMatch(sk, VAR_IMPOUND_TRIG)) m_impoundTrig = data;
+	else if (StringMatch(sk, VAR_LANDUSE)){ m_landuse = data; }
+	else if (StringMatch(sk, VAR_POND_VOL)) { m_pondVol = data; }
     //else if (StringMatch(sk, VAR_SNAC))m_snowAccu = data;
     //else if (StringMatch(sk, VAR_SNME))m_snowMelt = data;
     else

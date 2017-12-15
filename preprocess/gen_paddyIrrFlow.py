@@ -78,7 +78,7 @@ def find_neighbour_pond(dem, landuse, subbasin, pond):
         f.write("\n")
     f.close
 
-def ImportPaddyPondFlow(sqlite_file, db):
+def ImportPaddyPondFlow(db):
     # delete if existed, create if not existed
     cList = db.collection_names()
     if not StringInList(DB_TAB_PADDYPONDFLOW.upper(), cList):
@@ -92,7 +92,7 @@ def ImportPaddyPondFlow(sqlite_file, db):
         dic[PADDYPONDFLOW_PADDYID.upper()] = dataItems[id][0]
         dic[PADDYPONDFLOW_PONDID.upper()] = dataItems[id][1]
         dic[PADDYPONDFLOW_REACHID.upper()] = dataItems[id][2]
-        db[DB_TAB_PADDYPONDFLOW.upper()].find_one_and_replace(dic, dic, dic, dic, upsert=True)
+        db[DB_TAB_PADDYPONDFLOW.upper()].find_one_and_replace(dic, dic, dic, upsert=True)
 
     print 'Paddy pond flow tables are imported.'
 
@@ -115,6 +115,4 @@ if __name__ == '__main__':
         sys.exit(1)
     db = conn[SpatialDBName]
 
-    from txt2db3 import reConstructSQLiteDB
-    reConstructSQLiteDB()
-    ImportPaddyPondFlow(TXT_DB_DIR + os.sep + sqliteFile, db)
+    ImportPaddyPondFlow(db)

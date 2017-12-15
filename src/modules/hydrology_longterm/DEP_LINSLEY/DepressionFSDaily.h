@@ -79,7 +79,8 @@ private:
     float m_depCo;
     /// depression storage capacity (mm)
     float *m_depCap;
-
+	/// pond volumn
+	float *m_pondVol;
     /// pet
     float *m_pet;
     /// evaporation from the interception storage
