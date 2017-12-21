@@ -5,7 +5,7 @@ ModuleFactory::ModuleFactory(const string &configFileName, const string &modelPa
                              const string &dbName, int subBasinID, LayeringMethod layingMethod, int scenarioID)
         : m_modulePath(modelPath), m_conn(conn), m_dbName(dbName), m_subBasinID(subBasinID), 
           m_layingMethod(layingMethod), m_scenarioID(scenarioID),
-		  m_reaches(NULL), m_scenario(NULL), m_subbasins(NULL)
+		  m_ponds(NULL), m_reaches(NULL), m_scenario(NULL), m_subbasins(NULL)
 {
     Init(configFileName);
 #ifdef USE_MONGODB
@@ -115,6 +115,11 @@ ModuleFactory::~ModuleFactory(void)
         delete m_reaches;
         m_reaches = NULL;
     }
+	if (m_ponds != NULL)
+	{
+		delete m_ponds;
+		m_ponds = NULL;
+	}
 	if (m_subbasins != NULL)
 	{
 		delete m_subbasins;
@@ -323,7 +328,9 @@ float ModuleFactory::CreateModuleList(string dbName, int subbasinID, int numThre
         {
             //cout << parameters.size() << "\t" << j << "\t";
             ParamInfo &param = parameters[j];
-            //if (param.Dimension != DT_Single)
+            if (param.Dimension == DT_Pond){
+				bool flag = true;
+			}
             //	cout << "\t\t" << param.Name << endl;
    //         cout << "\t\t" << id << " : " << param.Name << endl;
 			//if (StringMatch(param.Name,"SOL_SOLP"))

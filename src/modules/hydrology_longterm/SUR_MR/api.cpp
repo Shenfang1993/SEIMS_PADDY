@@ -49,7 +49,7 @@ extern "C" SEIMS_MODULE_API const char *MetadataInformation()
 	//mdi.AddParameter(VAR_WILTPOINT,UNIT_WAT_RATIO, DESC_WILTPOINT, Source_ParameterDB, DT_Raster2D);
 	//mdi.AddParameter(VAR_POROST, UNIT_NON_DIM, DESC_POROST, Source_ParameterDB, DT_Raster2D);
 
-    mdi.AddInput(VAR_POND_VOL, UNIT_DEPTH_MM, DESC_POND_VOL, Source_Module, DT_Raster1D);
+    //mdi.AddInput(VAR_POND_VOL, UNIT_DEPTH_MM, DESC_POND_VOL, Source_Module, DT_Raster1D);
 	mdi.AddInput(VAR_NEPR, UNIT_DEPTH_MM, DESC_NEPR, Source_Module, DT_Raster1D);
     mdi.AddInput(VAR_TMEAN, UNIT_TEMP_DEG, DESC_TMEAN, Source_Module, DT_Raster1D);
     mdi.AddInput(VAR_DPST, UNIT_DEPTH_MM, DESC_DPST, Source_Module, DT_Raster1D);

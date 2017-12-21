@@ -43,6 +43,8 @@ private:
 	//! Precipitation
     float *m_P;
 
+	float *m_pond;
+
 	// The embankment area ratio of paddy rice HRU
 	float m_embnkfr_pr;
 	// The fraction of precipitation fall on the embankment that drain into ditches or canals directly

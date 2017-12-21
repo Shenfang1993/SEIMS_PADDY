@@ -173,6 +173,8 @@
 /// Replaced Tag_ReachParameter and Tag_RchParam by VAR_REACH_PARAM
 #define VAR_REACH_PARAM                        "ReachParam"
 #define DESC_REACH_PARAM                       "Reach parameters such as stream order, manning's n and downstream subbasin id"
+#define VAR_POND_PARAM                         "PondParam"
+#define DESC_POND_PARAM                        "Pond parameters such as paddy id, pond id which used for irrgation"
 /// Add Subbasins as AddParameters for modules
 #define VAR_SUBBASIN_PARAM						"SubbasinParam"
 #define DESC_SUBBASIN_PARAM						"Statistics of subbasin related parameters"
@@ -196,7 +198,7 @@
 #define DB_TAB_SITELIST            "SITELIST"
 #define DB_TAB_SCENARIO            "BMPDATABASE"
 #define DB_TAB_REACH            "REACHES"
-#define DB_TAB_POND              "PADDYPONDFLOW"
+#define DB_TAB_POND              "PONDS"
 #define DB_TAB_SPATIAL            "SPATIAL"  /// i.e., spatial.files
 #define DB_TAB_SITES            "SITES"
 #define DB_TAB_DATAVALUES        "DATA_VALUES" // hydroClimate data values
@@ -206,7 +208,11 @@
 #define DB_TAB_FILEIN            "FILE_IN"
 #define DB_TAB_FILEOUT            "FILE_OUT"
 /// Fields in DB_TAB_POND ///
-#define POND_PONDID               "PONDID"
+#define POND_PONDID1               "PONDID1"
+#define POND_PADDYID               "PADDY_CELLID"
+#define POND_REACHID               "REACHID"
+#define POND_PONDID2               "PONDID2"
+#define POND_PONDID3               "PONDID3"
 /// Fields in DB_TAB_REACH ///
 #define REACH_SUBBASIN            "SUBBASINID"
 #define REACH_NUMCELLS            "NUM_CELLS"
@@ -735,6 +741,7 @@
 #define VAR_LAMBDA0 "lambda0"
 #define VAR_LAMBDA1 "lambda1"
 #define VAR_LAMBDA2 "lambda2"
+#define VAR_POND "pond"
 #define VAR_LANDCOVER "landcover"
 #define VAR_LANDUSE "landuse"
 #define VAR_LANDUSE_LOOKUP "LanduseLookup"
@@ -1479,6 +1486,7 @@
 #define DESC_LAMBDA0 "non-algal portion of the light extinction coefficient"
 #define DESC_LAMBDA1 "linear algal self-shading coefficient"
 #define DESC_LAMBDA2 "nonlinear algal self-shading coefficient"
+#define DESC_POND "pond id"
 #define DESC_LANDCOVER "landcover code"
 #define DESC_LANDUSE "landuse code"
 #define DESC_LANDUSE_LOOKUP "lookup table of landuse"

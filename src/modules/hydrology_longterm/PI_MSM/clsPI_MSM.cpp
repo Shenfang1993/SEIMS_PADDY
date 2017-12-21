@@ -14,7 +14,7 @@
 #include <time.h>
 #include <omp.h>
 
-clsPI_MSM::clsPI_MSM(void) : m_nCells(-1), m_Pi_b(-1.f), m_dateLastTimeStep(-1), m_Init_IS(0.f), 
+clsPI_MSM::clsPI_MSM(void) : m_nCells(-1), m_Pi_b(-1.f), m_dateLastTimeStep(-1), m_Init_IS(0.f), m_pond(NULL),
 	m_netPrecipitation(NULL), m_evaporation(NULL),m_interceptionLoss(NULL), m_st(NULL),m_landuse(NULL),m_pcp2canfr_pr(0.5f),m_embnkfr_pr(0.15f)
 {
 }
@@ -42,6 +42,8 @@ void clsPI_MSM::Set1DData(const char *key, int nRows, float *data)
         m_minSt = data;
 	else if (StringMatch(s, VAR_LANDUSE))
 		m_landuse = data;
+	else if (StringMatch(s, VAR_POND))
+		m_pond = data;
     else
         throw ModelException(MID_PI_MSM, "Set1DData", "Parameter " + s + " does not exist.");
 }
@@ -100,6 +102,9 @@ int clsPI_MSM::Execute()
     {
         if (m_P[i] > 0.f)
         {
+			/*if(m_pond[i] != NODATA){
+			bool flag = true;
+			}*/
             //interception storage capacity
             float degree = 2.f * PI * (julian - 87.f) / 365.f;
 			/// For water, min and max are both 0, then no need for specific handling.

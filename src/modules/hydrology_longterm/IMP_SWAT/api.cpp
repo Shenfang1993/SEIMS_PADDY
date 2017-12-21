@@ -29,6 +29,7 @@ extern "C" SEIMS_MODULE_API const char *MetadataInformation()
     mdi.SetWebsite(SEIMS_SITE);
     mdi.SetHelpfile("");
     /// set parameters from database
+	mdi.AddParameter(VAR_POND_PARAM, UNIT_NON_DIM, DESC_POND_PARAM, Source_ParameterDB, DT_Pond);
 	mdi.AddParameter(Tag_ROUTING_LAYERS, UNIT_NON_DIM, DESC_ROUTING_LAYERS, Source_ParameterDB, DT_Array2D);
 	mdi.AddParameter(Tag_CellWidth, UNIT_LEN_M, DESC_CellWidth, Source_ParameterDB, DT_Single);
 	mdi.AddParameter(Tag_TimeStep, UNIT_DAY, DESC_TIMESTEP, Source_ParameterDB, DT_Single);

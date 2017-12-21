@@ -205,7 +205,7 @@ void DepressionFSDaily::Set1DData(const char *key, int n, float *data)
 		m_P = data;
 	else if (StringMatch(sk, VAR_LANDUSE))
 		m_landuse = data;
-	else if (StringMatch(sk, VAR_POND_VOL)) { m_pondVol = data; }
+	//else if (StringMatch(sk, VAR_POND_VOL)) { m_pondVol = data; }
     else
         throw ModelException(MID_DEP_LINSLEY, "Set1DData", "Parameter " + sk+" does not exist.");
 }

@@ -27,8 +27,35 @@ using namespace std;
 class clsPond
 {
 public:
-	clsPond(void);
+	clsPond(const bson_t *&bsonTable);
+
 	~clsPond(void);
+
+	int GetPaddyID() { return PaddyID; }
+
+	int GetPondID1() { return PondID1; }
+
+	int GetPondID2() { return PondID2; }
+
+	int GetPondID3() { return PondID3; }
+
+	float GetReachID() { return this->ReachID; }
+
+private:
+	//! paddy id, which need to irrigation
+	int PaddyID;
+
+	//! pond id, which used to irrigate the paddy related first
+	int PondID1;
+
+	//! pond id, which used to irrigate the paddy related second
+	int PondID2;
+
+	//! pond id, which used to irrigate the paddy related third
+	int PondID3;
+
+	//! reach id, which used to irrigate the paddy if the three pond are not enough
+	float ReachID;
 };
 
 class clsPonds
@@ -49,9 +76,22 @@ public:
 	~clsPonds();
 
 	/// Get pond number
-	int GetPondNumber() { return this->m_pondNum; }
+	int GetPaddyNumber() { return this->m_paddyNum; }
+
+	/// Get single pond information by paddy ID
+	clsPond *GetPondByID(int id) { return m_pondsInfo.at(id); }
+
+	/// Get paddy IDs (vector)
+	vector<int>& GetPaddyIDs() { return this->m_paddyIDs; }
 
 private:
-	/// ponds number
-	int m_pondNum;
+	/// paddy number
+	int m_paddyNum;
+	/// paddy IDs
+    vector<int> m_paddyIDs;
+    /* Map container to store all reaches information
+     * key: paddy ID
+     * value: clsReach instance (pointer)
+     */
+    map<int, clsPond *> m_pondsInfo;
 };

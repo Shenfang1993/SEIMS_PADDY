@@ -7,7 +7,7 @@
 #include <omp.h>
 
 SUR_MR::SUR_MR(void) : m_nCells(-1), m_dt(-1), m_nSoilLayers(-1), m_tFrozen(NODATA_VALUE), 
-					   m_kRunoff(NODATA_VALUE),m_pMax(NODATA_VALUE), m_landuse(NULL), m_pondVol(NULL)
+					   m_kRunoff(NODATA_VALUE),m_pMax(NODATA_VALUE), m_landuse(NULL), m_pondVol(NULL),
                        //m_tSnow(NODATA_VALUE), m_t0(NODATA_VALUE), m_snowAccu(NULL), m_snowMelt(NULL),
                        m_sFrozen(NODATA_VALUE), m_runoffCo(NULL), m_initSoilStorage(NULL), m_tMean(NULL), 
 					   // m_soilThick(NULL) ,m_fieldCap(NULL),m_wiltingPoint(NULL), m_porosity(NULL), 

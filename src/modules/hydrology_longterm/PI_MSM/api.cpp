@@ -39,6 +39,7 @@ extern "C" SEIMS_MODULE_API const char *MetadataInformation()
     mdi.AddParameter(VAR_PI_B, UNIT_NON_DIM, DESC_PI_B, Source_ParameterDB, DT_Single);
     mdi.AddParameter(VAR_INIT_IS, UNIT_NON_DIM, DESC_INIT_IS, Source_ParameterDB, DT_Single);
 	mdi.AddParameter(VAR_LANDUSE, UNIT_NON_DIM, DESC_LANDUSE, Source_ParameterDB, DT_Raster1D);
+	mdi.AddParameter(VAR_POND, UNIT_NON_DIM, DESC_POND, Source_ParameterDB, DT_Raster1D);
     // set the output variables
     mdi.AddOutput(VAR_INLO, UNIT_DEPTH_MM, DESC_INLO, DT_Raster1D);
     mdi.AddOutput(VAR_INET, UNIT_DEPTH_MM, DESC_INET, DT_Raster1D);

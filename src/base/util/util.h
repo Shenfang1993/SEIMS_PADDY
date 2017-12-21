@@ -47,6 +47,7 @@ using namespace std;
 #define NODATA_VALUE    -9999.0f
 // TODO, replace NODATA by NODATA_VALUE thoroughly
 #define NODATA          -99.0f
+#define NODATA_POND  255.f
 const float MISSINGFLOAT = -1 * FLT_MAX;
 const float MAXFLOAT  = FLT_MAX;
 /**
