@@ -126,10 +126,11 @@ int SUR_MR::Execute()
     {
         float hWater = 0.f;
 		hWater = m_pNet[i] + m_sd[i];
-		if (m_potVol != NULL)
+		// such process will make pot vol repeat add in DEP module, so remove, 2017.12.24
+		/*if (m_potVol != NULL)
 			hWater += m_potVol[i];
 		if (m_pondVol != NULL)
-			hWater += m_pondVol[i];
+			hWater += m_pondVol[i];*/
         if (hWater > 0.f)
         {
 			/// update total soil water content

@@ -943,6 +943,7 @@
 #define VAR_SOL_MP "sol_mp"
 #define VAR_SOL_N "sol_N"
 #define VAR_POND_VOL "pond_vol"
+#define VAR_POND_SA "pondSurfaceArea"
 
 /// define rice related parameters
 #define VAR_CROPSTA "cropsta"
@@ -1194,6 +1195,7 @@
 //////////////////////////////////////////////////////////////////////////
 #define UNIT_AREA_HA "ha"
 #define UNIT_AREA_KM2 "km2"                         /// Square kilometer of area
+#define UNIT_DEPTH_M2 "m2"
 #define UNIT_AREA_RATIO "m2/m2"
 #define UNIT_CONDRATE_MSPA "m/s/kPa"                /// Rate of decline in stomatal conductance per unit increase in vapor pressure deficit
 #define UNIT_CONT_KGHA "kg/ha"                      /// For  convenient, keep consistent with SWAT, need Conversion later.
@@ -1681,6 +1683,7 @@
 #define DESC_SOL_MP "manure phosphorus in soil"
 #define DESC_SOL_N "soil organic nitrogen, include nitrogen in manure"
 #define DESC_POND_VOL "pond volumn"
+#define DESC_POND_SA "pond surface area"
 
 /// description of rice related parameters
 #define DESC_TBD "Base temperature for development"

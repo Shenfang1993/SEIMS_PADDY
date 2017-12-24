@@ -39,7 +39,7 @@ public:
 
 	int GetPondID3() { return PondID3; }
 
-	int GetReachID() { return this->ReachID; }
+	int GetReachID() { return ReachID; }
 
 private:
 	//! paddy id, which need to irrigation
@@ -55,7 +55,7 @@ private:
 	int PondID3;
 
 	//! reach id, which used to irrigate the paddy if the three pond are not enough
-	float ReachID;
+	int ReachID;
 };
 
 class clsPonds
@@ -89,7 +89,7 @@ private:
 	int m_paddyNum;
 	/// paddy IDs
     vector<int> m_paddyIDs;
-    /* Map container to store all reaches information
+    /* Map container to store all ponds information
      * key: paddy ID
      * value: clsReach instance (pointer)
      */

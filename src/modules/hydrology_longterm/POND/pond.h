@@ -79,7 +79,16 @@ private:
 	float **m_soilStorage;
 	/// reach storage (m^3) at time, t
 	float *m_chStorage;
-	
+	/* Map container to store all ponds information
+     * key: paddy ID
+     * value: clsReach instance (pointer)
+     */
+    map<int, clsPond *> m_pondsInfo;
+	/// reaches number
+	int m_nReaches;
+	/// maximum soil layers, mlyr in SWAT
+	int m_soilLayers;
+	 
 public:
     //! Constructor
     POND(void);
@@ -98,6 +107,8 @@ public:
     virtual void Set2DData(const char *key, int n, int col, float **data);
 
 	void POND::SetPonds(clsPonds *ponds);
+
+	void POND::SetReaches(clsReaches *reaches);
 private:
     /*!
      * \brief check the input data. Make sure all the input data is available.

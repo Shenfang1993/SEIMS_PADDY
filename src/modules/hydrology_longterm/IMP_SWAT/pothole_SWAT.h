@@ -207,6 +207,39 @@ private:
 	// amount of stable mineral phosphorus absorbed to sediment in surface runoff
 	float *m_sedMinPSToCh;
 
+	/// paddy number
+	int m_paddyNum;
+	/// paddy IDs
+	vector<int> m_paddyIDs;
+	/// pond id, which used to irrigate the paddy related first
+	float *m_pondID1;
+	/// pond id, which used to irrigate the paddy related second
+	float *m_pondID2;
+	/// pond id, which used to irrigate the paddy related third
+	float *m_pondID3;
+	/// reach id, which used to irrigate the paddy if the three pond are not enough
+	float *m_reachID;
+	/// pond volumn
+	float *m_pondVol;
+	/// reach storage (m^3) at time, t
+	float *m_chStorage;
+	/// pond surface
+	float *m_pondSurfaceArea;
+	/// reaches number
+	int m_nReaches;
+	/// all pond id
+	vector<int> m_pondIds;
+	/*
+	 * pond id cell
+	 * key: pond id
+	 * value: pond cell id
+	 */
+    map<int, vector<int> > m_pondIdInfo;
+	/// pond number
+	int m_npond;
+	/// pond id
+	float *m_pond;
+
 public:
     //! Constructor
     IMP_SWAT(void);
@@ -224,6 +257,9 @@ public:
 
     virtual void Set2DData(const char *key, int n, int col, float **data);
 
+	void IMP_SWAT::SetReaches(clsReaches *reaches);
+
+	void IMP_SWAT::SetPonds(clsPonds *ponds);
 private:
     /*!
      * \brief check the input data. Make sure all the input data is available.
@@ -266,4 +302,9 @@ private:
 	 * release water stored in pothole
 	 */
 	void releaseWater(int id);
+
+	void IMP_SWAT::irrigateFromPond(int id);
+
+	float IMP_SWAT::pondSurfaceArea(int id);
+
 };

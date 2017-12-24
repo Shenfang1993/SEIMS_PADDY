@@ -80,10 +80,10 @@ def find_neighbour_pond(dem, landuse, subbasin, pond):
                         for n in range(len(dic_sort)):
                             locals()['nearest_pond_id_%s' % n] = dic_sort[n][0]
                         for n in range(len(dic_sort), maxNum):
-                            locals()['nearest_pond_id_%s' % n] = DEFAULT_NODATA
+                            locals()['nearest_pond_id_%s' % n] = -9999
 
                     # write to txt
-                    flow_table = [cell_id, reach_id]
+                    flow_table = [cell_id, int(reach_id)]
                     for n in range(maxNum):
                         flow_table.append(locals()['nearest_pond_id_%s' % n])
                     f = open(txtName, 'a')
@@ -103,11 +103,11 @@ def ImportPaddyPondFlow(db):
     dataItems = ReadDataItemsFromTxt(txtName)
     for id in range(len(dataItems)):
         dic = {}
-        dic[POND_PADDYID.upper()] = dataItems[id][0].astype(int)
-        dic[POND_REACHID.upper()] = dataItems[id][1].astype(int)
-        dic[POND_PONDID1.upper()] = dataItems[id][2].astype(int)
-        dic[POND_PONDID2.upper()] = dataItems[id][3].astype(int)
-        dic[POND_PONDID3.upper()] = dataItems[id][4].astype(int)
+        dic[POND_PADDYID.upper()] = int(dataItems[id][0])
+        dic[POND_REACHID.upper()] = int(dataItems[id][1])
+        dic[POND_PONDID1.upper()] = int(dataItems[id][2])
+        dic[POND_PONDID2.upper()] = int(dataItems[id][3])
+        dic[POND_PONDID3.upper()] = int(dataItems[id][4])
         db[DB_TAB_POND.upper()].insert(dic)
 
     print 'Paddy pond flow tables are imported.'
@@ -125,7 +125,7 @@ if __name__ == '__main__':
     for qjrw in qjrws:
         id = qjrw.getValue("PONDID")
         pond_area[id] = qjrw.getValue("Shape_Area")
-    # find_neighbour_pond(dem, landuse, subbasin, pond)
+    find_neighbour_pond(dem, landuse, subbasin, pond)
 
     #Load Configuration file
     LoadConfiguration(GetINIfile())
@@ -136,15 +136,15 @@ if __name__ == '__main__':
         sys.stderr.write("Could not connect to MongoDB: %s" % e)
         sys.exit(1)
     db = conn[SpatialDBName]
-    # ImportPaddyPondFlow(db)
+    ImportPaddyPondFlow(db)
 
     # import pond raster to mongodb
-    tifFolder = WORKING_DIR + os.sep + DIR_NAME_TIFFIMPORT
-    mask = r"J:\seims_paddy\zts_output\mask.tif"
-    pond_dir = "J:\seims_paddy\pond"
-
-    strCmd = '"%s/import_raster" %s %s %s %s %s %d %s' % (
-        CPP_PROGRAM_DIR, mask, pond_dir, SpatialDBName,
-        DB_TAB_SPATIAL.upper(), HOSTNAME, PORT, tifFolder)
-    print strCmd
-    RunExternalCmd(strCmd)
+    # tifFolder = WORKING_DIR + os.sep + DIR_NAME_TIFFIMPORT
+    # mask = r"J:\seims_paddy\zts_output\mask.tif"
+    # pond_dir = "J:\seims_paddy\pond"
+    #
+    # strCmd = '"%s/import_raster" %s %s %s %s %s %d %s' % (
+    #     CPP_PROGRAM_DIR, mask, pond_dir, SpatialDBName,
+    #     DB_TAB_SPATIAL.upper(), HOSTNAME, PORT, tifFolder)
+    # print strCmd
+    # RunExternalCmd(strCmd)

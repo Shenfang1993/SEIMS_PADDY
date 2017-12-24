@@ -626,18 +626,18 @@ bool MGTOpt_SWAT::GetOperationCode(int i, int &factoryID, vector<int> &nOps)
 				dvsDepent = true;
 			}
 		}
-		if (huscDepent == true && i == 70){
-			struct tm dateInfo;
-			LocalTime(m_date, &dateInfo);
-			dateInfo.tm_mon += 1;
-			cout << "date:" << dateInfo.tm_mon << "-" << dateInfo.tm_mday << endl;
+		/*if (huscDepent == true && i == 70){
+		struct tm dateInfo;
+		LocalTime(m_date, &dateInfo);
+		dateInfo.tm_mon += 1;
+		cout << "date:" << dateInfo.tm_mon << "-" << dateInfo.tm_mday << endl;
 		}
 		if (dvsDepent == true && i == 70){
-			struct tm dateInfo;
-			LocalTime(m_date, &dateInfo);
-			dateInfo.tm_mon += 1;
-			cout << "date:" << dateInfo.tm_mon << "-" << dateInfo.tm_mday << endl;
-		}
+		struct tm dateInfo;
+		LocalTime(m_date, &dateInfo);
+		dateInfo.tm_mon += 1;
+		cout << "date:" << dateInfo.tm_mon << "-" << dateInfo.tm_mday << endl;
+		}*/
 		
 		/// The operation will be applied either date or HUSC are satisfied,
 		/// and also in case of repeated run

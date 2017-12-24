@@ -21,7 +21,9 @@ IMP_SWAT::IMP_SWAT(void) : m_cnv(NODATA_VALUE), m_nCells(-1), m_cellWidth(NODATA
 	m_kVolat(NODATA_VALUE), m_kNitri(NODATA_VALUE), m_pot_k(NODATA_VALUE), m_embnkfr_pr(0.15f), m_potVolUp(NULL),
 	/// overland to channel
 	m_surfqToCh(NULL), m_sedToCh(NULL), m_surNO3ToCh(NULL), m_surNH4ToCh(NULL), m_surSolPToCh(NULL), m_surCodToCh(NULL), 
-	m_sedOrgNToCh(NULL), m_sedOrgPToCh(NULL), m_sedMinPAToCh(NULL), m_sedMinPSToCh(NULL)
+	m_sedOrgNToCh(NULL), m_sedOrgPToCh(NULL), m_sedMinPAToCh(NULL), m_sedMinPSToCh(NULL),
+	m_pond(NULL), m_chStorage(NULL), m_pondID1(NULL), m_pondID2(NULL), m_pondID3(NULL), m_reachID(NULL), m_paddyNum(-1),
+	m_pondVol(NULL)
 {
 	//m_potSedIn(NULL), m_potSandIn(NULL), m_potSiltIn(NULL), m_potClayIn(NULL), m_potSagIn(NULL), m_potLagIn(NULL),
 }
@@ -54,13 +56,16 @@ bool IMP_SWAT::CheckInputSize(const char *key, int n)
 	if (n <= 0)
 		throw ModelException(MID_IMP_SWAT, "CheckInputSize",
 		"Input data for " + string(key) + " is invalid. The size could not be less than zero.");
-	if (this->m_nCells != n)
-	{
-		if (this->m_nCells <= 0) this->m_nCells = n;
-		else
-			throw ModelException(MID_IMP_SWAT, "CheckInputSize", "Input data for " + string(key) +
-			" is invalid. All the input data should have same size.");
+	if(m_nReaches != n - 1){
+		if (this->m_nCells != n)
+		{
+			if (this->m_nCells <= 0) this->m_nCells = n;
+			else
+				throw ModelException(MID_IMP_SWAT, "CheckInputSize", "Input data for " + string(key) +
+				" is invalid. All the input data should have same size.");
+		}
 	}
+	
 	return true;
 }
 
@@ -210,6 +215,9 @@ void IMP_SWAT::Set1DData(const char *key, int n, float *data)
 	else if (StringMatch(sk, VAR_SEDORGP)) m_sedOrgP = data;
 	else if (StringMatch(sk, VAR_SEDMINPA)) m_sedActiveMinP = data;
 	else if (StringMatch(sk, VAR_SEDMINPS)) m_sedStableMinP = data;
+	else if (StringMatch(sk, VAR_POND)) { m_pond = data; }
+	else if (StringMatch(sk, VAR_CHST)) { m_chStorage = data; }		
+	else if (StringMatch(sk, VAR_POND_VOL)) { m_pondVol = data; }
 	else
 		throw ModelException(MID_IMP_SWAT, "Set1DData", "Parameter " + sk + " does not exist.");
 }
@@ -253,6 +261,92 @@ void IMP_SWAT::initialOutputs()
 	/// water loss
 	if (m_potSeep == NULL) Initialize1DArray(m_nCells, m_potSeep, 0.f);
 	if (m_potEvap == NULL) Initialize1DArray(m_nCells, m_potEvap, 0.f);
+	if (m_irrDepth == NULL) Initialize1DArray(m_nCells, m_irrDepth, 0.f);
+	// count all the pond id according to the pond raster and the grid cell of each pond
+	if(m_pondIds.empty()){
+		for (int i = 0; i < m_nCells; ++i){
+			if(m_pond[i] != NODATA_POND){
+				m_pondIds.push_back(m_pond[i]);
+				m_pondIdInfo[m_pond[i]].push_back(i);
+			}
+		}
+		// remove repeated id
+		sort(m_pondIds.begin(),m_pondIds.end());
+		m_pondIds.erase(unique(m_pondIds.begin(), m_pondIds.end()), m_pondIds.end());
+		m_npond = m_pondIds.size();
+	}
+}
+
+void IMP_SWAT::SetReaches(clsReaches *reaches)
+{
+	if(reaches != NULL)
+	{
+		m_nReaches = reaches->GetReachNumber();
+	}
+}
+
+void IMP_SWAT::SetPonds(clsPonds *ponds){
+	if(ponds != NULL){
+		m_paddyNum = ponds->GetPaddyNumber();
+		m_paddyIDs = ponds->GetPaddyIDs();
+		int num = m_paddyIDs.back();
+		if(m_pondID1 == NULL){
+			Initialize1DArray(num + 1, m_pondID1, 0.f);
+			Initialize1DArray(num + 1, m_pondID2, 0.f);
+			Initialize1DArray(num + 1, m_pondID3, 0.f);
+			Initialize1DArray(num + 1, m_reachID, 0.f);
+		}
+
+		for (vector<int>::iterator it = m_paddyIDs.begin(); it != m_paddyIDs.end(); it++){
+			int i = *it;
+			clsPond* tmpPond = ponds->GetPondByID(i);
+			m_pondID1[i] = tmpPond->GetPondID1();
+			m_pondID2[i] = tmpPond->GetPondID2();
+			m_pondID3[i] = tmpPond->GetPondID3();
+			m_reachID[i] = tmpPond->GetReachID();
+		}
+	}
+}
+
+float IMP_SWAT::pondSurfaceArea(int id)
+{
+	// now, we assume if the cell is pond, then the cell area is pond area, the whole pond area is the sun of all cell area
+	float cellArea = m_cellWidth * m_cellWidth;
+	float cellNum = m_pondIdInfo[id].size();
+	return cellNum * cellArea;	
+}
+
+void IMP_SWAT::irrigateFromPond(int id){
+	float irrWater = m_irrDepth[id] * m_cellArea * (1.f - m_embnkfr_pr) * 1000.f; // mm * m2
+	int tmp[] = {m_pondID1[id], m_pondID2[id], m_pondID3[id]};
+	vector<int> irrSource;
+	// remove -9999 from irrigation source
+	for (int i = 0; i < 3; i++){
+		if (tmp[i] != NODATA_VALUE){
+			irrSource.push_back(tmp[i]);
+		}
+	}
+	// compute the depth should remove from corresponding pond vol in order
+	for (vector<int>::iterator i = irrSource.begin(); i != irrSource.end(); i++){
+		int j = *i;
+		float sa = pondSurfaceArea(j);
+		// from pond
+		m_pondVol[j] -= min(m_pondVol[j], irrWater / sa);
+		irrWater -= m_pondVol[j] * sa;
+		// if enough, then stop search nest irrigation source
+		if (irrWater <= 0.f){
+			m_irrDepth[id] = 0.f;
+			break;
+		}							
+	}
+	// if not enough, from reach
+	if (irrWater > 0.f){
+		irrWater = irrWater / 1000.f; // m *m2
+		int reachId = m_reachID[id];
+		m_chStorage[reachId] -= irrWater;
+		m_chStorage[reachId] = max(0.f, m_chStorage[reachId]);
+		m_irrDepth[id] = 0.f;
+	}
 }
 
 int IMP_SWAT::Execute()
@@ -274,11 +368,10 @@ int IMP_SWAT::Execute()
 				// force to auto-irrigation at the end of the day, added by SF.
 				if (m_potVol[id] < m_potVolMin[id])
 				{
-					// the water need to auto-irrigation, the source are from nearst pond and subbasin reach 
-					// the irrigate depth will be used in POND
+					// the water need to auto-irrigation, the source are from nearst pond and subbasin reach
 					m_irrDepth[id] = m_potVolUp[id] - m_potVol[id];
-					m_potVol[id] = m_potVolUp[id]; 
-					 
+					irrigateFromPond(id);
+					m_potVol[id] = m_potVolUp[id] - m_irrDepth[id]; 		
 				}
 			}
 			else{
@@ -847,7 +940,7 @@ void IMP_SWAT::Get1DData(const char *key, int *n, float **data)
 	else if (StringMatch(sk, VAR_POT_NO3)) *data = m_potNo3;
 	else if (StringMatch(sk, VAR_POT_NH4)) *data = m_potNH4;
 	else if (StringMatch(sk, VAR_POT_SOLP)) *data = m_potSolP;
-	else if (StringMatch(sk, VAR_IRRDEPTH)) *data = m_irrDepth;
+	//else if (StringMatch(sk, VAR_IRRDEPTH)) *data = m_irrDepth;
 	else
 		throw ModelException(MID_IMP_SWAT, "Get1DData","Parameter" + sk + "does not exist.");
 	*n = m_nCells;
