@@ -103,11 +103,11 @@ def ImportPaddyPondFlow(db):
     dataItems = ReadDataItemsFromTxt(txtName)
     for id in range(len(dataItems)):
         dic = {}
-        dic[POND_PADDYID.upper()] = dataItems[id][0]
-        dic[POND_REACHID.upper()] = dataItems[id][1]
-        dic[POND_PONDID1.upper()] = dataItems[id][2]
-        dic[POND_PONDID2.upper()] = dataItems[id][3]
-        dic[POND_PONDID3.upper()] = dataItems[id][4]
+        dic[POND_PADDYID.upper()] = dataItems[id][0].astype(int)
+        dic[POND_REACHID.upper()] = dataItems[id][1].astype(int)
+        dic[POND_PONDID1.upper()] = dataItems[id][2].astype(int)
+        dic[POND_PONDID2.upper()] = dataItems[id][3].astype(int)
+        dic[POND_PONDID3.upper()] = dataItems[id][4].astype(int)
         db[DB_TAB_POND.upper()].insert(dic)
 
     print 'Paddy pond flow tables are imported.'

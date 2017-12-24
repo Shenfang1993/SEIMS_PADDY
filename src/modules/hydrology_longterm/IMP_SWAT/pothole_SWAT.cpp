@@ -11,7 +11,7 @@ IMP_SWAT::IMP_SWAT(void) : m_cnv(NODATA_VALUE), m_nCells(-1), m_cellWidth(NODATA
 	m_soilLayers(NULL), m_nSoilLayers(-1), m_routingLayers(NULL), m_nRoutingLayers(-1), m_subbasin(NULL),
 	m_slope(NULL), m_ks(NULL), m_sol_sat(NULL), m_sol_sumfc(NULL), m_soilThick(NULL), m_sol_por(NULL), 
 	m_evLAI(NODATA_VALUE), m_potTilemm(NODATA_VALUE), m_potNo3Decay(NODATA_VALUE), m_potSolPDecay(NODATA_VALUE),
-	m_impoundTrig(NULL), 
+	m_impoundTrig(NULL), m_irrDepth(NULL),
 	m_sedYield(NULL), m_sandYield(NULL), m_siltYield(NULL), m_clayYield(NULL), m_smaggreYield(NULL), m_lgaggreYield(NULL),
 	m_depEvapor(NULL), m_depStorage(NULL), m_LAIDay(NULL), m_pet(NULL), m_soilStorage(NULL), m_soilStorageProfile(NULL), 
 	m_surfaceRunoff(NULL), m_surqNo3(NULL), m_surqNH4(NULL), m_surqSolP(NULL), m_surqCOD(NULL), m_sedOrgN(NULL), m_sedOrgP(NULL), m_sedActiveMinP(NULL), m_sedStableMinP(NULL),
@@ -46,6 +46,7 @@ IMP_SWAT::~IMP_SWAT(void)
 	if (m_potVol != NULL) Release1DArray(m_potVol);
 	if (m_potSeep != NULL) Release1DArray(m_potSeep);
 	if (m_potEvap != NULL) Release1DArray(m_potEvap);
+	if (m_irrDepth != NULL) Release1DArray(m_irrDepth);
 }
 
 bool IMP_SWAT::CheckInputSize(const char *key, int n)
@@ -273,8 +274,9 @@ int IMP_SWAT::Execute()
 				// force to auto-irrigation at the end of the day, added by SF.
 				if (m_potVol[id] < m_potVolMin[id])
 				{
-					/// the water need to auto-irrigation, the source are from nearst pond and subbasin reach 
-					float irrVol_m3 = (m_potVolUp[id] - m_potVol[id]) / 1000.f * m_cellWidth * m_cellWidth * (1.f - m_embnkfr_pr);
+					// the water need to auto-irrigation, the source are from nearst pond and subbasin reach 
+					// the irrigate depth will be used in POND
+					m_irrDepth[id] = m_potVolUp[id] - m_potVol[id];
 					m_potVol[id] = m_potVolUp[id]; 
 					 
 				}
@@ -845,6 +847,7 @@ void IMP_SWAT::Get1DData(const char *key, int *n, float **data)
 	else if (StringMatch(sk, VAR_POT_NO3)) *data = m_potNo3;
 	else if (StringMatch(sk, VAR_POT_NH4)) *data = m_potNH4;
 	else if (StringMatch(sk, VAR_POT_SOLP)) *data = m_potSolP;
+	else if (StringMatch(sk, VAR_IRRDEPTH)) *data = m_irrDepth;
 	else
 		throw ModelException(MID_IMP_SWAT, "Get1DData","Parameter" + sk + "does not exist.");
 	*n = m_nCells;

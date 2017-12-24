@@ -154,6 +154,8 @@ private:
 	float *m_potLag;
 	/// volume   mm
 	float *m_potVol;
+	/// irrigate depth
+	float *m_irrDepth;
 	/// maximum volume mm
 	float *m_potVolMax;
 	/// lowest volume mm

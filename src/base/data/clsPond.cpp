@@ -20,13 +20,13 @@ clsPond::clsPond(const bson_t *&bsonTable)
 	if (bson_iter_init_find(&iterator, bsonTable, POND_PADDYID))
 		this->PaddyID = GetIntFromBSONITER(&iterator);
 	if (bson_iter_init_find(&iterator, bsonTable, POND_REACHID))
-		this->ReachID = GetIntFromBSONITER(&iterator);
+		this->ReachID = GetFloatFromBSONITER(&iterator);
 	if (bson_iter_init_find(&iterator, bsonTable, POND_PONDID1))
 		this->PondID1 = GetIntFromBSONITER(&iterator);
 	if (bson_iter_init_find(&iterator, bsonTable, POND_PONDID2))
 		this->PondID2 = GetIntFromBSONITER(&iterator);
 	if (bson_iter_init_find(&iterator, bsonTable, POND_PONDID3))
-		this->PondID3 = GetFloatFromBSONITER(&iterator);
+		this->PondID3 = GetIntFromBSONITER(&iterator);
 }
 
 clsPond::~clsPond(void)

@@ -39,7 +39,7 @@ public:
 
 	int GetPondID3() { return PondID3; }
 
-	float GetReachID() { return this->ReachID; }
+	int GetReachID() { return this->ReachID; }
 
 private:
 	//! paddy id, which need to irrigation

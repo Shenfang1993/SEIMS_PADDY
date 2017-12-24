@@ -23,19 +23,13 @@ class POND : public SimulationModule
 private:
 	/// pond number
 	int m_npond;
+	/// pond id
+	float *m_pond;
 	/// pond volumn
 	float *m_pondVol;
 	/// max pond depth
 	float *m_pondVolMax;
-	/// 
-	float *m_surfaceAreaEM;
-	///
-	float *m_surfaceAreaPR;
-	///
-	float *m_volEM;
-	///
-	float *m_volPR;
-	///
+	/// pond surface
 	float *m_pondSurfaceArea;
 	///
 	float m_evap_coe;
@@ -51,6 +45,40 @@ private:
 	float m_cellWidth;
 	/// cell area, ha
 	float m_cellArea;
+	/// landuse code
+	float *m_landuse;
+	/// all pond id
+	vector<int> m_pondIds;
+	/*
+	 * pond id cell
+	 * key: pond id
+	 * value: pond cell id
+	 */
+    map<int, vector<int> > m_pondIdInfo;
+	/// paddy number
+	int m_paddyNum;
+	/// paddy IDs
+	vector<int> m_paddyIDs;
+	/// pond id, which used to irrigate the paddy related first
+	float *m_pondID1;
+	/// pond id, which used to irrigate the paddy related second
+	float *m_pondID2;
+	/// pond id, which used to irrigate the paddy related third
+	float *m_pondID3;
+	/// reach id, which used to irrigate the paddy if the three pond are not enough
+	float *m_reachID;
+	/// the irrigate depth
+	float *m_irrDepth;
+	/// 
+	float m_embnkfr_pr;
+	/// pet
+	float *m_pet;
+	/// saturated conductivity
+	float **m_ks;
+	/// amount of water stored in soil layers on current day
+	float **m_soilStorage;
+	/// reach storage (m^3) at time, t
+	float *m_chStorage;
 	
 public:
     //! Constructor
@@ -69,6 +97,7 @@ public:
 
     virtual void Set2DData(const char *key, int n, int col, float **data);
 
+	void POND::SetPonds(clsPonds *ponds);
 private:
     /*!
      * \brief check the input data. Make sure all the input data is available.
