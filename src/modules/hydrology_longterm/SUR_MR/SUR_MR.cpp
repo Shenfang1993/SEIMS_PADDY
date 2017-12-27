@@ -150,10 +150,7 @@ int SUR_MR::Execute()
                 float alpha = m_kRunoff - (m_kRunoff - 1.f) * hWater / m_pMax;
                 if (hWater >= m_pMax)
                     alpha = 1.f;
-				// for pond, in normal case, it will not generate surface runoff
-				if ((int)m_landuse[i] == LANDUSE_ID_POND){
-					m_runoffCo[i] = 1.f;
-				}
+				
                 //runoff percentage
                 float runoffPercentage;
                 if (m_runoffCo[i] > 0.99f)

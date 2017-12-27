@@ -29,6 +29,8 @@ extern "C" SEIMS_MODULE_API const char *MetadataInformation()
     mdi.SetVersion("1.2");
     mdi.SetWebsite(SEIMS_SITE);
 
+	mdi.AddParameter(VAR_POND, UNIT_NON_DIM, DESC_POND, Source_ParameterDB, DT_Raster1D);
+	//mdi.AddInput(VAR_POND_VOL, UNIT_DEPTH_MM, DESC_POND_VOL, Source_Module, DT_Raster1D);
 	mdi.AddInput(VAR_PCP, UNIT_DEPTH_MM, DESC_PCP, Source_Module, DT_Raster1D);/// ITP_P
 	mdi.AddParameter(VAR_LANDUSE, UNIT_NON_DIM, DESC_LANDUSE, Source_ParameterDB, DT_Raster1D);
     mdi.AddParameter(VAR_DEPREIN, UNIT_NON_DIM, DESC_DEPREIN, Source_ParameterDB, DT_Single);

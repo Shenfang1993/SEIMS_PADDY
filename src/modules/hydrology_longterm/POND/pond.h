@@ -34,9 +34,9 @@ private:
 	///
 	float m_evap_coe;
 	///
-	float *m_pondEvap;
+	float *m_pondCellEvap;
 	///
-	float *m_pondSeep;
+	float *m_pondCellSeep;
 	/// conversion factor (mm/ha => m^3)
 	float m_cnv; 
     /// valid cells number
@@ -88,6 +88,19 @@ private:
 	int m_nReaches;
 	/// maximum soil layers, mlyr in SWAT
 	int m_soilLayers;
+	/**
+    *	@brief 2d array of flow in cells
+    *
+    *	The first element in each sub-array is the number of flow in cells in this sub-array
+    */
+    float **m_flowInIndex;
+	/// surface runoff (mm)
+	float *m_surfaceRunoff;
+	/// depth of grid cell in pond 
+	float *m_pondCellVol;
+	/// excess precipitation calculated in the infiltration module
+	float *m_pe;
+
 	 
 public:
     //! Constructor
@@ -106,9 +119,6 @@ public:
 
     virtual void Set2DData(const char *key, int n, int col, float **data);
 
-	void POND::SetPonds(clsPonds *ponds);
-
-	void POND::SetReaches(clsReaches *reaches);
 private:
     /*!
      * \brief check the input data. Make sure all the input data is available.
@@ -137,15 +147,10 @@ private:
     bool CheckInputSize2D(const char *key, int n, int col);
 	/// initialize all possible outputs
 	void initialOutputs();
-	/*!
-	 * \brief Simulates depressional areas that do not 
-	 * drain to the stream network (pothole) and impounded areas such as rice paddies
-	 * reWrite from pothole.f of SWAT
-	 */
-	void pondSimulate(int id);
-	/*!
-	 * compute surface area assuming a cone shape, ha
-	 */
-	void pondSurfaceArea(int id);
 	
+	void POND::pondSurfaceArea(int id);
+	
+	void POND::pondSimulate(int id, int cellId);
+	
+	void POND::findFlowInCell(int id, int cellId, vector<int> flowInCell);
 };

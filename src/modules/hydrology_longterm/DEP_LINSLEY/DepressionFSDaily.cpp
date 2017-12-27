@@ -21,7 +21,7 @@ DepressionFSDaily::DepressionFSDaily(void) : m_nCells(-1),m_depCo(NODATA_VALUE),
                                              m_sd(NULL), m_ed(NULL), m_sr(NULL),
 											 m_impoundTriger(NULL),m_potVol(NULL),
 											 m_landuse(NULL),m_pcp2canfr_pr(0.5f),m_embnkfr_pr(0.15f),
-											 m_P(NULL)
+											 m_P(NULL), m_pond(NULL)
 {
 }
 
@@ -88,75 +88,75 @@ int DepressionFSDaily::Execute()
     {
         //////////////////////////////////////////////////////////////////////////
         // runoff
-		// for pond, the pcp will be stored
-		if (FloatEqual(m_landuse[i],LANDUSE_ID_POND)){
-			if (m_pondVol != NULL){
-				m_pondVol[i] = m_pe[i];
+		// for pond, here not deal with, the pcp will be stored, which means m_pe[i] will be add to pond vol in POND module
+		if ((int)m_landuse[i] != LANDUSE_ID_POND)
+		{
+			if (m_depCap[i] < 0.001f)
+			{
+				m_sr[i] = m_pe[i];
 				m_sd[i] = 0.f;
-			}			
-		}
-        if (m_depCap[i] < 0.001f && (!FloatEqual(m_landuse[i],LANDUSE_ID_POND)))
-        {
-            m_sr[i] = m_pe[i];
-            m_sd[i] = 0.f;
-        }
-        else if (m_pe[i] > 0.f)
-        {
-            float pc = m_pe[i] - m_depCap[i] * log(1.f - m_sd[i] / m_depCap[i]);
-            float deltaSd = m_pe[i] * exp(-pc / m_depCap[i]);
-            if (deltaSd > m_depCap[i] - m_sd[i])
-                deltaSd = m_depCap[i] - m_sd[i];
-            m_sd[i] += deltaSd;
-            m_sr[i] = m_pe[i] - deltaSd;
-        }
-        else
-        {
-            m_sd[i] += m_pe[i];
-            m_sr[i] = 0.f;
-        }
-		// the part of runoff comes from the paddy embankment area,which is direct to flow to the reach
-		if(FloatEqual(m_landuse[i],LANDUSE_ID_PADDY)){
-			m_sr[i] += m_P[i] * m_pcp2canfr_pr * m_embnkfr_pr;
-		}
-        //////////////////////////////////////////////////////////////////////////
-        // evaporation
-        if (m_sd[i] > 0)
-        {
-			bool flagImpoundTriger = (m_impoundTriger != NULL) && FloatEqual(m_landuse[i],LANDUSE_ID_PADDY) && FloatEqual(m_impoundTriger[i], 0.f);
-			if(!flagImpoundTriger){
-				/// TODO: Is this logically right? PET is just potential, which include 
-				///       not only ET from surface water, but also from plant and soil.
-				///       Please Check the corresponding theory. By LJ.
-				// evaporation from depression storage
-				if (m_pet[i] - m_ei[i] < m_sd[i])
-				{
-					m_ed[i] = m_pet[i] - m_ei[i];
-				}
-				else
-				{
-					m_ed[i] = m_sd[i];
-				}
-				m_sd[i] -= m_ed[i];
 			}
-			else{
-				// if the cell is paddy and impound,the evaporation process will be compute in the IMP_SWAT
-				if (m_potVol != NULL)
-				{
-					m_potVol[i] += m_sr[i];
-					m_potVol[i] += m_sd[i];
-					m_sr[i] = 0.f;
-					m_sd[i] = 0.f;
+			else if (m_pe[i] > 0.f)
+			{
+				float pc = m_pe[i] - m_depCap[i] * log(1.f - m_sd[i] / m_depCap[i]);
+				float deltaSd = m_pe[i] * exp(-pc / m_depCap[i]);
+				if (deltaSd > m_depCap[i] - m_sd[i])
+					deltaSd = m_depCap[i] - m_sd[i];
+				m_sd[i] += deltaSd;
+				m_sr[i] = m_pe[i] - deltaSd;
+			}
+			else
+			{
+				m_sd[i] += m_pe[i];
+				m_sr[i] = 0.f;
+			}
+			// the part of runoff comes from the paddy embankment area,which is direct to flow to the reach
+			if(FloatEqual(m_landuse[i],LANDUSE_ID_PADDY)){
+				m_sr[i] += m_P[i] * m_pcp2canfr_pr * m_embnkfr_pr;
+			}
+			//////////////////////////////////////////////////////////////////////////
+			// evaporation
+			if (m_sd[i] > 0)
+			{
+				bool flagImpoundTriger = (m_impoundTriger != NULL) && FloatEqual(m_landuse[i],LANDUSE_ID_PADDY) && FloatEqual(m_impoundTriger[i], 0.f);
+				if(!flagImpoundTriger){
+					/// TODO: Is this logically right? PET is just potential, which include 
+					///       not only ET from surface water, but also from plant and soil.
+					///       Please Check the corresponding theory. By LJ.
+					// evaporation from depression storage
+					if (m_pet[i] - m_ei[i] < m_sd[i])
+					{
+						m_ed[i] = m_pet[i] - m_ei[i];
+					}
+					else
+					{
+						m_ed[i] = m_sd[i];
+					}
+					m_sd[i] -= m_ed[i];
+				}
+				else{
+					// if the cell is paddy and impound,the evaporation process will be compute in the IMP_SWAT
+					if (m_potVol != NULL)
+					{
+						m_potVol[i] += m_sr[i];
+						m_potVol[i] += m_sd[i];
+						m_sr[i] = 0.f;
+						m_sd[i] = 0.f;
+					}
 				}
 			}
+			else
+			{
+				m_ed[i] = 0.f;
+				m_sd[i] = 0.f;
+			}
+		} 
+		else{
+			// for pond cell, make sr, sd and ed 0
+			m_sr[i] = 0.f;
+			m_sd[i] = 0.f;
+			m_ed[i] = 0.f;
 		}
-        else
-        {
-            m_ed[i] = 0.f;
-            m_sd[i] = 0.f;
-        }
-		/*if (m_impoundTriger != NULL && FloatEqual(m_impoundTriger[i], 0.f)){
-
-		}*/
     }
     return true;
 }
@@ -206,6 +206,8 @@ void DepressionFSDaily::Set1DData(const char *key, int n, float *data)
 	else if (StringMatch(sk, VAR_LANDUSE))
 		m_landuse = data;
 	//else if (StringMatch(sk, VAR_POND_VOL)) { m_pondVol = data; }
+	else if (StringMatch(sk, VAR_POND))
+		m_pond = data;
     else
         throw ModelException(MID_DEP_LINSLEY, "Set1DData", "Parameter " + sk+" does not exist.");
 }

@@ -102,9 +102,6 @@ int clsPI_MSM::Execute()
     {
         if (m_P[i] > 0.f)
         {
-			/*if(m_pond[i] != NODATA){
-			bool flag = true;
-			}*/
             //interception storage capacity
             float degree = 2.f * PI * (julian - 87.f) / 365.f;
 			/// For water, min and max are both 0, then no need for specific handling.

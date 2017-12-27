@@ -81,6 +81,8 @@ private:
     float *m_depCap;
 	/// pond volumn
 	float *m_pondVol;
+	/// pond id
+	float *m_pond;
     /// pet
     float *m_pet;
     /// evaporation from the interception storage
