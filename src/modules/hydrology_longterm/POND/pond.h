@@ -33,6 +33,8 @@ private:
 	float *m_pondSurfaceArea;
 	///
 	float m_evap_coe;
+	/// hydraulic conductivity of soil surface of pond
+	float m_pond_k;
 	///
 	float *m_pondCellEvap;
 	///
@@ -100,7 +102,80 @@ private:
 	float *m_pondCellVol;
 	/// excess precipitation calculated in the infiltration module
 	float *m_pe;
-
+	/// flow out index
+	float *m_flowOutIndex;
+	/* Map container to store all ponds flow out information
+     * key: paddy ID
+     * value: down stream pond
+     */
+	map<int, vector<int> > m_pondDownPond;
+	/* Map container to store all ponds flow in information
+     * key: pond cell id
+     * value: flow in cell id
+     */
+	map<int, vector<int> > m_pondFlowInCell;
+	/// sediment yield transported on each cell, kg
+	float *m_sedYield;
+	//! sand yield
+	float *m_sandYield;
+	//! silt yield
+	float *m_siltYield;
+	//! clay yield
+	float *m_clayYield;
+	//! small aggregate yield
+	float *m_smaggreYield;
+	//! large aggregate yield
+	float *m_lgaggreYield;
+	/// sediment amount kg
+	float *m_pondSed;
+	/// sand 
+	float *m_pondSand;
+	/// silt
+	float *m_pondSilt;
+	/// clay
+	float *m_pondClay;
+	/// small aggregate
+	float *m_pondSag;
+	/// large aggregate
+	float *m_pondLag;
+	/// no3 amount kg
+	float *m_pondNo3;
+	/// nh4 amount kg
+	float *m_pondNH4;
+	/// orgN amount kg
+	float *m_pondOrgN;
+	/// soluble phosphorus amount, kg
+	float *m_pondSolP;
+	/// orgP amount kg
+	float *m_pondOrgP;
+	/// active mineral P kg
+	float *m_pondActMinP;
+	/// stable mineral P kg
+	float *m_pondStaMinP;
+	/// amount of nitrate transported with surface runoff, kg/ha
+	float *m_surqNo3;
+	/// amount of ammonian transported with surface runoff, kg/ha
+	float *m_surqNH4;
+	/// amount of soluble phosphorus transported with surface runoff, kg/ha
+	float *m_surqSolP;
+	/// , kg/ha
+	float *m_surqCOD;
+	/// , kg/ha
+	float *m_sedOrgN;
+	///, kg/ha
+	float *m_sedOrgP;
+	/// , kg/ha
+	float *m_sedActiveMinP;
+	/// , kg/ha
+	float *m_sedStableMinP;
+	/// Soluble phosphorus decay rate in impounded water body
+	float m_pondSolPDecay;
+	/// volatilization rate constant in impounded water body, /day
+	float m_kVolat;
+	/// nitrification rate constant in impounded water body, /day
+	float m_kNitri;
+	/// time step (second)
+	float m_timestep;
 	 
 public:
     //! Constructor
@@ -152,5 +227,9 @@ private:
 	
 	void POND::pondSimulate(int id, int cellId);
 	
-	void POND::findFlowInCell(int id, int cellId, vector<int> flowInCell);
+	void POND::findFlowInCell(int id, int cellId);
+
+	int POND::findFlowOutPond(int id, int cellId);
+
+	void POND::pondRelease(int id, float qOut);
 };

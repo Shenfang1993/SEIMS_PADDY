@@ -660,6 +660,7 @@
 #define VAR_POT_TILEMM "pot_tilemm"
 #define VAR_POT_NO3DECAY "pot_no3l"
 #define VAR_POT_SOLPDECAY "pot_solpl"
+#define VAR_POND_SOLPDECAY "pond_solpl"
 #define VAR_EXCP "EXCP"                             /// excess precipitation
 #define VAR_EXT_COEF "EXT_COEF"
 #define VAR_FERTILIZER_LOOKUP "FertilizerLookup"
