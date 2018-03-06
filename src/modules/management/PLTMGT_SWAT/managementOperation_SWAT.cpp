@@ -67,7 +67,10 @@ MGTOpt_SWAT::MGTOpt_SWAT(void) : m_nCells(-1), m_nSub(-1), m_soilLayers(-1),
                                  m_doneOpSequence(NULL),
 								 m_initialized(false),
         /// rice related variables
-								 m_cropsta(NULL), m_nplsb(NODATA_VALUE), m_lape(NODATA_VALUE), m_dvs(NULL), m_wrr(NULL)
+								 m_cropsta(NULL), m_nplsb(NODATA_VALUE), m_lape(NODATA_VALUE), m_dvs(NULL), m_wrr(NULL),
+								 m_wagt(NULL), m_wrt(NULL), m_ricePlantN(NULL), m_zrt(NULL), m_ts(NULL), m_wlvg(NULL), 
+								 m_wlvd(NULL), m_wsts(NULL), m_wstr(NULL), m_ngr(NULL), m_tnass(NULL), m_wso(NULL), 
+								 m_nsp(NULL)
 								 
 {
 }
@@ -263,6 +266,19 @@ void MGTOpt_SWAT::Set1DData(const char *key, int n, float *data)
 	else if (StringMatch(sk, VAR_CROPSTA)) m_cropsta = data;
 	else if (StringMatch(sk, VAR_DVS)) { m_dvs = data; }
 	else if (StringMatch(sk, VAR_WRR)) { m_wrr = data; }
+	else if (StringMatch(sk, VAR_WAGT)) { m_wagt = data; }
+	else if (StringMatch(sk, VAR_WRT)) { m_wrt = data; }
+	else if (StringMatch(sk, VAR_RICE_PLANT_N)) m_ricePlantN = data;
+	else if (StringMatch(sk, VAR_ZRT)) m_zrt = data;
+	else if (StringMatch(sk, VAR_TS)) m_ts = data;
+	else if (StringMatch(sk, VAR_WLVG)) m_wlvg = data;
+	else if (StringMatch(sk, VAR_WLVD)) m_wlvd = data;
+	else if (StringMatch(sk, VAR_WSTS)) m_wsts = data;
+	else if (StringMatch(sk, VAR_WSTR)) m_wstr = data;
+	else if (StringMatch(sk, VAR_WSO)) m_wso = data;
+	else if (StringMatch(sk, VAR_NGR)) m_ngr = data;
+	else if (StringMatch(sk, VAR_NSP)) m_nsp = data;
+	else if (StringMatch(sk, VAR_TNASS)) m_tnass = data;
     else
         throw ModelException(MID_PLTMGT_SWAT, "Set1DData", "Parameter " + sk + " does not exist.");
 }
@@ -593,7 +609,7 @@ bool MGTOpt_SWAT::GetOperationCode(int i, int &factoryID, vector<int> &nOps)
 				dateInfo.tm_mday == tmpOperation->GetDay()) {
 					if (tmpOperation->GetYear() > 2){
 						tmpOperation->GetYear() -= 1900;
-						if (dateInfo.tm_yday == tmpOperation->GetYear()){
+						if (dateInfo.tm_year == tmpOperation->GetYear()){
 							dateDepent = true;
 						}
 					}
@@ -622,21 +638,31 @@ bool MGTOpt_SWAT::GetOperationCode(int i, int &factoryID, vector<int> &nOps)
 		}
 		/// if dvs is defined
 		if (tmpOperation->GetDVS() > 0.f){
+			struct tm dateInfo;
+			LocalTime(m_date, &dateInfo);
 			if (m_dvs[i] >= tmpOperation->GetDVS()){
-				dvsDepent = true;
+				if (tmpOperation->GetYear() > 2){
+					tmpOperation->GetYear() -= 1900;
+					if (dateInfo.tm_year == tmpOperation->GetYear()){
+						dvsDepent = true;
+					}
+				}else{
+					dvsDepent = true;
+				}				
 			}
 		}
 		/*if (huscDepent == true && i == 70){
+		bool flag = true;
+		}*/
+		/*if (dvsDepent == true && i == 70){
 		struct tm dateInfo;
 		LocalTime(m_date, &dateInfo);
 		dateInfo.tm_mon += 1;
-		cout << "date:" << dateInfo.tm_mon << "-" << dateInfo.tm_mday << endl;
-		}
-		if (dvsDepent == true && i == 70){
-		struct tm dateInfo;
-		LocalTime(m_date, &dateInfo);
-		dateInfo.tm_mon += 1;
-		cout << "date:" << dateInfo.tm_mon << "-" << dateInfo.tm_mday << endl;
+		ofstream fout;
+		fout.open("j:\\date.txt", ios::app);
+		fout << dateInfo.tm_mon << "-" << dateInfo.tm_mday  << "\t" << opCode << "\n";
+		fout << flush;
+		fout.close();
 		}*/
 		
 		/// The operation will be applied either date or HUSC are satisfied,
@@ -719,7 +745,7 @@ void MGTOpt_SWAT::ExecuteRicePlantOperation(int i, int &factoryID, int nOp)
 	m_cropsta[i] = 1.f;
 	m_LAIDay[i] = m_lape * m_nplsb; //re-initialize LAI at day of emergence
 	m_phuAcc[i] = 0.f;
-	m_plantN[i] = 0.f;
+	m_ricePlantN[i] = 0.f;
 }
 
 void MGTOpt_SWAT::ExecuteRiceHarvestOperation(int i, int &factoryID, int nOp)
@@ -727,6 +753,8 @@ void MGTOpt_SWAT::ExecuteRiceHarvestOperation(int i, int &factoryID, int nOp)
 	/// rice yield is above, the check can be pass ,check if yield is from above or below ground
 	float yield = 0.f, resnew = 0.f, rtresnew = 0.f;
 	yield = m_wrr[i];
+	m_biomass[i] = m_wagt[i] + m_wrt[i];
+	m_frRoot[i] = m_wrt[i] / m_biomass[i];
 	resnew = m_biomass[i] - yield;
 	rtresnew = m_frRoot[i] * m_biomass[i];
 
@@ -736,13 +764,19 @@ void MGTOpt_SWAT::ExecuteRiceHarvestOperation(int i, int &factoryID, int nOp)
 
 	/// calculate nutrient removed with yield
 	float yieldn = 0.f, yieldp = 0.f;
-	yieldn = 0.80f * m_plantN[i];
+	yieldn = 0.80f * m_ricePlantN[i];
 	// yieldp = min(yieldp, 0.80f * m_plantP[i]);
 
 	/// call rootfr.f to distributes dead root mass through the soil profile
 	/// i.e., derive fraction of roots in each layer
 	float *rtfr = new float[(int) m_nSoilLayers[i]];
-	rootFraction(i, rtfr);
+	float zll = 0.f;
+	for (int l = 0; l < m_nSoilLayers[i]; l++){
+		// Root length in each soil layer
+		float zrtl = min(m_soilThick[i][l]/1000.f, max(m_zrt[i] - zll/1000.f, 0.f));
+		zll = zll + m_soilThick[i][l];
+		rtfr[l] = zrtl / m_zrt[i];
+	}
 
 	/// fraction of N, P in residue (ff1) or roots (ff2)
 	float hi = yield / m_biomass[i];
@@ -750,7 +784,7 @@ void MGTOpt_SWAT::ExecuteRiceHarvestOperation(int i, int &factoryID, int nOp)
 	float ff2 = 1.f - ff1;
 	/// update residue, N, P on soil surface
 	m_soilRsd[i][0] += resnew;
-	m_soilFreshOrgN[i][0] += ff1 * (m_plantN[i] - yieldn);
+	m_soilFreshOrgN[i][0] += ff1 * (m_ricePlantN[i] - yieldn);
 	// m_soilFreshOrgP[i][0] += ff1 * (m_plantP[i] - yieldp);
 	m_soilRsd[i][0] = max(m_soilRsd[i][0], 0.f);
 	m_soilFreshOrgN[i][0] = max(m_soilFreshOrgN[i][0], 0.f);
@@ -760,18 +794,31 @@ void MGTOpt_SWAT::ExecuteRiceHarvestOperation(int i, int &factoryID, int nOp)
 	for (int l = 0; l < m_nSoilLayers[i]; l++)
 	{
 		m_soilRsd[i][l] += rtfr[l] * rtresnew;
-		m_soilFreshOrgN[i][l] += rtfr[l] * ff2 * (m_plantN[i] - yieldn);
+		m_soilFreshOrgN[i][l] += rtfr[l] * ff2 * (m_ricePlantN[i] - yieldn);
 		// m_soilFreshOrgP[i][l] += rtfr[l] * ff2 * (m_plantP[i] - yieldp);
 	}
 
 	m_cropsta[i] = 0.f;
-	m_biomass[i] = 0.f;
-	m_frRoot[i] = 0.f;
-	m_plantN[i] = 0.f;
+	m_ricePlantN[i] = 0.f;
 	m_plantP[i] = 0.f;
 	m_frStrsWa[i] = 1.f;
 	m_LAIDay[i] = 0.f;
 	m_cropsta[i] = 0.f;
+	m_dvs[i] = 0.f;
+	m_ts[i] = 0.f;
+	/*m_ts[i] = 0.f;
+	m_wlvg[i] = 0.f;
+	m_wlvd[i] = 0.f;
+	m_wsts[i] = 0.f;
+	m_wstr[i] = 0.f;
+	m_wrr[i] = 0.f;
+	m_wso[i] = 0.f;
+	m_wrt[i] = 0.f;
+	m_ngr[i] = 0.f;
+	m_nsp[i] = 0.f;
+	m_tnass[i] = 0.f;
+	m_zrt[i] = 0.f;*/
+	//m_dormFlag[i] = 1.f;
 	Release1DArray(rtfr);
 }
 
@@ -1906,14 +1953,16 @@ void MGTOpt_SWAT::ScheduledManagement(int cellIdx, int &factoryID, int nOp)
 {
     /// nOp is seqNo. * 1000 + operationCode
     int mgtCode = nOp % 1000;
-	int landuse_id = m_landUse[cellIdx];
     switch (mgtCode)
     {
-        case BMP_PLTOP_Plant:
-			/*if (landuse_id == 33) ExecuteRicePlantOperation(cellIdx,factoryID,nOp);
-            else ExecutePlantOperation(cellIdx, factoryID, nOp);*/
-			ExecuteRicePlantOperation(cellIdx,factoryID,nOp);
-            //ExecutePlantOperation(cellIdx, factoryID, nOp);
+        case BMP_PLTOP_paddyPlant:
+			ExecuteRicePlantOperation(cellIdx,factoryID, nOp);
+			break;
+		case BMP_PLTOP_paddyHarvestKill:
+			ExecuteRiceHarvestOperation(cellIdx, factoryID, nOp);
+			break;
+	    case BMP_PLTOP_Plant:
+            ExecutePlantOperation(cellIdx, factoryID, nOp);
 			break;
         case BMP_PLTOP_Irrigation:
             ExecuteIrrigationOperation(cellIdx, factoryID, nOp);
@@ -1925,10 +1974,7 @@ void MGTOpt_SWAT::ScheduledManagement(int cellIdx, int &factoryID, int nOp)
             ExecutePesticideOperation(cellIdx, factoryID, nOp);
             break;
         case BMP_PLTOP_HarvestKill:
-			/*if (landuse_id == 33) ExecuteRiceHarvestOperation(cellIdx, factoryID, nOp);
-			else ExecuteHarvestKillOperation(cellIdx, factoryID, nOp);*/
 			ExecuteHarvestKillOperation(cellIdx, factoryID, nOp);
-            //ExecuteHarvestKillOperation(cellIdx, factoryID, nOp);
 			break;
         case BMP_PLTOP_Tillage:
             ExecuteTillageOperation(cellIdx, factoryID, nOp);
@@ -1968,9 +2014,6 @@ int MGTOpt_SWAT::Execute()
     CheckInputData();  /// essential input data, other inputs for specific management operation will be check separately.
     initialOutputs(); /// all possible outputs will be initialized to avoid NULL pointer problems.
 	/// initialize arrays at the beginning of the current day, derived from sim_initday.f of SWAT
-	//cout<<"PLTMGT_SWAT, pre: "<<m_soilSolP[46364][0];
-	//int cellid = 918;
-	//cout<<"PLTMGT_SWAT, cell id: "<<cellid<<", sol_no3[0]: "<<m_soilNO3[cellid][0]<<endl;
 #pragma omp parallel for
 	for (int i = 0; i < m_nCells; i++)
 	{
@@ -1983,42 +2026,14 @@ int MGTOpt_SWAT::Execute()
     {
         int curFactoryID = -1;
         vector<int> curOps;
-		/* Output HUSC to txt files for debugging purpose */
-		//if (i == 8144){
-		//	ofstream fs;
-		//	utils util;
-		//	string filename = "e:\\husc.txt";
-		//	fs.open(filename.c_str(), ios::out|ios::app);
-		//	if (fs.is_open())
-		//	{
-		//		fs << util.ConvertToString(&this->m_date) <<", IGRO: "<<m_igro[i]<<", phuBase: "<<m_phuBase[i]<<", phuAcc: "<<m_phuAcc[i]<<", phuPlt: "<<m_phuPlant[i]<< endl;
-		//		fs.close();
-		//	}
-		//}
         if (GetOperationCode(i, curFactoryID, curOps))
         {
             for (vector<int>::iterator it = curOps.begin(); it != curOps.end(); it++)
             {
-                //cout<<curFactoryID<<","<<*it<<endl;
                 ScheduledManagement(i, curFactoryID, *it);
-				// output for debug, by LJ.
-				//if (i == 8144){
-				//	ofstream fs;
-				//	utils util;
-				//	//string filename = "D:\\pltMgt.txt";
-				//	string filename = "pltMgt.txt";
-				//	fs.open(filename.c_str(), ios::out|ios::app);
-				//	if (fs.is_open())
-				//	{
-				//		fs << util.ConvertToString(&this->m_date) <<", IGRO: "<<m_igro[i]<<", phuBase: "<<m_phuBase[i]<<", phuAcc: "<<m_phuAcc[i]<<", phuPlt: "<<m_phuPlant[i]<<", optCode: "<<*it<< endl;
-				//		fs.close();
-				//	}
-				//}
             }
         }
 	}
-	//cout<<"PLTMGT_SWAT, cell id: "<<cellid<<", sol_no3[0]: "<<m_soilNO3[cellid][0]<<endl;
-	//cout<<", new: "<<m_soilSolP[46364][0]<<endl;
     return 0;
 }
 

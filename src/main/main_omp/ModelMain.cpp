@@ -237,6 +237,9 @@ void ModelMain::Execute()
         cout << util.ConvertToString2(&t) << endl;
         /// Calculate index of current year of the entire simulation
         int curYear = GetYear(t);
+		if(curYear == 115.f){
+			bool flag = true;
+		}
         int yearIdx = curYear - startYear;
         nHs = int(m_dtCh / m_dtHs);
         for (int i = 0; i < nHs; i++)

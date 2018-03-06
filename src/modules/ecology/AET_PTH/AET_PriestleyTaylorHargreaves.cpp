@@ -3,6 +3,7 @@
 #include "AET_PriestleyTaylorHargreaves.h"
 #include "MetadataInfo.h"
 #include "ModelException.h"
+#include "ClimateParams.h"
 
 using namespace std;
 
@@ -173,7 +174,7 @@ int AET_PT_H::Execute()
 {
     CheckInputData();
 	initialOutputs();
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int i = 0; i < m_nCells; i++)
     {
 		/// define intermediate variables
@@ -186,6 +187,17 @@ int AET_PT_H::Execute()
         etco = 0.8f;
         effnup = 0.1f;
 
+		/*float day = JulianDay(this->m_date);
+		if (day == 151){
+			bool flag = true;
+		}
+		if (i == 70){
+			ofstream fout;
+			fout.open("j:\\pet.txt", ios::app);
+			fout << pet << "\t" <<m_pet[70] << "\n";
+			fout << flush;
+			fout.close();
+		}*/
 		if (pet < UTIL_ZERO)
 		{
 			pet = 0.f;
@@ -194,7 +206,7 @@ int AET_PT_H::Execute()
 		}
 		else
         {
-			if (((int)m_landuse[i] == LANDUSE_ID_PADDY) && (m_cropsta[i] != NULL) && (m_cropsta[i] == 4.f)){
+			if ((int)m_landuse[i] == LANDUSE_ID_PADDY && m_cropsta[i] == 4.f){
 				// if the cell is paddy and rice in main field
 				// add oryza method to compute soil evaporation and crop transpiration, by sf 2017.11.29
 				es_max = ORYZA_maxPET(pet, i);

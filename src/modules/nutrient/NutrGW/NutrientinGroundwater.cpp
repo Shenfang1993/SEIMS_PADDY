@@ -212,6 +212,7 @@ int NutrientinGroundwater::Execute()
 		int nCells = subbasin->getCellCount();
 		float subArea = nCells * m_cellWidth * m_cellWidth;	// m^2
 		float revap = subbasin->getEG();
+		//float revap = 1.5f;
 		/// 1. firstly, restore the groundwater storage during current day
 		///    since the m_gwStor has involved percolation water, just need add revap and runoff water
 		float gwqVol = m_gw_q[id] * m_TimeStep;	// m^3, water volume flow out

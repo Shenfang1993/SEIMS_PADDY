@@ -818,6 +818,7 @@
 #define VAR_EMBNKFR_PR "embnkfr_pr"
 #define VAR_PL_RSDCO "rsdco_pl"                     /// Plant residue decomposition coefficient
 #define VAR_PLANT_N "plant_N"
+#define VAR_RICE_PLANT_N "ricePlantN"
 #define VAR_PLANT_P "plant_P"
 #define VAR_PLTET_TOT "plt_et_tot"
 #define VAR_PLTPET_TOT "plt_pet_tot"
@@ -960,7 +961,7 @@
 #define VAR_SHCKD "shckd"
 #define VAR_KNF "knf"
 #define VAR_RGRLMX "rgrlMX"
-#define VAR_RGRLMN "rgrgMN"
+#define VAR_RGRLMN "rgrlMN"
 #define VAR_NH "nh"
 #define VAR_NPLH "nplh"
 #define VAR_NPLSB "nplsb"
@@ -1024,6 +1025,7 @@
 
 // rice related, changed with days
 #define VAR_CROPSTA "cropsta"
+#define VAR_SOWDAY "sowDay"
 #define VAR_TS "ts"
 #define VAR_WLVG "wlvg"
 #define VAR_WLVD "wlvd"
@@ -1558,6 +1560,7 @@
 #define DESC_PI_B "Interception Storage Capacity Exponent"
 #define DESC_PL_RSDCO "Plant residue decomposition coefficient"
 #define DESC_PLANT_N "amount of nitrogen in plant biomass (kg/ha), plantn in SWAT"
+#define DESC_RICE_PLANT_N ""
 #define DESC_PLANT_P "amount of phosphorus in plant biomass (kg/ha), plantp in SWAT"
 #define DESC_PLTET_TOT "actual ET simulated during life of plant"
 #define DESC_PLTPET_TOT "potential ET simulated during life of plant"
@@ -1762,6 +1765,7 @@
 #define DESC_ULDL ""
 
 #define DESC_CROPSTA "rice status code"
+#define DESC_SOWDAY ""
 #define DESC_TS ""
 #define DESC_WLVG ""
 #define DESC_WLVD ""

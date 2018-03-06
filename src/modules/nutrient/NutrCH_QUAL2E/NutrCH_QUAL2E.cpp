@@ -660,6 +660,13 @@ void NutrCH_QUAL2E::AddInputNutrient(int i)
 	}
 	/// dissolved N, P from overland surface flow routing and groundwater
 	m_chNO3[i]  += m_surNO3ToCh[i] + m_latNO3ToCh[i] + m_gwNO3ToCh[i];
+	/*if(i == 5){
+	ofstream fout;
+	fout.open("j:\\tn2.txt", ios::app);
+	fout << m_sedOrgNToCh[i] << "\t" << m_surNO3ToCh[i] << "\t" << m_latNO3ToCh[i] << "\t" << m_gwNO3ToCh[i] << "\n";
+	fout << flush;
+	fout.close();
+	}*/
 	if (m_surNH4ToCh != NULL && m_surNH4ToCh[i] > 0.f) m_chNH4[i] += m_surNH4ToCh[i];
 	m_chSolP[i] += m_surSolPToCh[i] + m_gwSolPToCh[i];
 
@@ -732,6 +739,13 @@ void NutrCH_QUAL2E::RouteOut(int i)
 	m_chOutAlgae[i] = m_chAlgae[i] * outFraction;
 	m_chOutChlora[i] = m_chChlora[i] * outFraction;
 	m_chOutTN[i] = m_chOutOrgN[i] + m_chOutNH4[i] + m_chOutNO2[i] + m_chOutNO3[i];
+	/*if( i == 5){
+	ofstream fout;
+	fout.open("j:\\tn.txt", ios::app);
+	fout << m_chOutOrgN[i] << "\t" << m_chOutNH4[i] << "\t" << m_chOutNO2[i] << "\t" << m_chOutNO3[i] << "\n";
+	fout << flush;
+	fout.close();
+	}*/
 	m_chOutTP[i] = m_chOutOrgP[i] + m_chOutSolP[i];
 	//if(i == 12) cout << "m_chOutOrgP: " << m_chOutOrgP[i] << ", m_chOrgP: " << m_chOrgP[i] << ", outFrac: "<<outFraction<<endl;
 	// kg ==> mg/L

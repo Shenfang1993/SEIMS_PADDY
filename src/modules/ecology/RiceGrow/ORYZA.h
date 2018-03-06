@@ -224,15 +224,24 @@ private:
 	float *m_cropsta;	
 	/// Temperature sum
 	float *m_ts;	
+	/// 
+	float m_tslvtr;
+	///
+	float m_tshckl;
+	/// Value of WLVG at end of exponential growth phase in seedbed
+	float *m_wlvgExs;
+	/// Value of LAI at end of exponential growth phase in seedbed
+	float *m_laiExs;
+	/// Value of WLVG at end of exponential growth phase after transplanting
+	float *m_wlvgExp;
+	/// Value of LAI at end of exponential growth phase after transplanting
+	float *m_laiExp;
 
 	/*   parameters related to the current day and latitude, to describe the sun */
 	/// Julian day
 	int m_jday;
 	///latitude of the stations
 	float *m_celllat;
-	float m_cellLat;
-	/// Photoperiodic daylength (base = -4 degrees)
-	//float *m_dayLenP;
 	/// Astronomical daylength (base = 0 degrees)
 	float *m_dayL;
 	/// Intermediate variable for subroutine Oryza_SSKYC
@@ -362,7 +371,7 @@ private:
 	/// amount of nitrogen stored in the nitrate pool
     float **m_soilNO3;
 	/// amount of nitrogen in plant biomass (kg/ha), from Biomass_EPIC
-	float *m_plantN;
+	float *m_ricePlantN;
 	/// amount of nitrogen in stem
 	float *m_anst;
 	/// amount of N uptake by plant
@@ -372,7 +381,31 @@ private:
 	/// Amount of N in leaves
 	float *m_anlv;	
 	/// the day of sowing
-	float sowDay;
+	float *m_sowDay;
+	/// Phosphorus uptake distribution parameter
+	float m_PUpDis;
+	/// fraction of plant biomass that is phosphorus, pltfr_p in SWAT
+	float *m_frPlantP;
+	/// phosphorus uptake parameter #1: normal fraction of P in crop biomass at emergence
+	float *m_frPlantP1;
+	/// phosphorus uptake parameter #2: normal fraction of P in crop biomass at 50% maturity
+	float *m_frPlantP2;
+	/// phosphorus uptake parameter #3: normal fraction of P in crop biomass at maturity
+	float *m_frPlantP3;
+	/// fraction of plant heat units (PHU) accumulated, also as output, phuacc in SWAT
+	float *m_frPHUacc;
+	/// total heat units needed to bring plant to maturity
+	float *m_PHUPlt;
+	/// amount of phosphorus in plant biomass (kg/ha), plantp in SWAT
+	float *m_plantP;
+	/// plant uptake of phosphorus, pplnt in SWAT
+	float *m_plantUpTkP;
+	/// minimum temperature for plant growth
+	float *m_tBase;
+	/// amount of phosphorus stored in solution
+	float **m_soilPsol;
+	/// fraction of potential plant growth achieved where the reduction is caused by phosphorus stress, strsp in SWAT
+	float *m_frStrsP;
 
 	/**  rice related parameters, output  **/
 	/// Development stage of the crop
@@ -449,5 +482,6 @@ private:
     //  Calculates plant nitrogen uptake
     //////////////////////////////////////////////////////////////////////////
 	void ORYZA::CalPlantNUptake(int i);
+	void ORYZA::PlantPhosphorusUptake(int i);
 };
 

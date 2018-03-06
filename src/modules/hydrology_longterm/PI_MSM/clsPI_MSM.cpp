@@ -117,7 +117,7 @@ int clsPI_MSM::Execute()
             if (availableSpace < m_P[i]){
                 m_interceptionLoss[i] = availableSpace;
 			    //if the cell is paddy, by default 15% part of pcp will be allocated to embankment area
-			    if (FloatEqual((int)m_landuse[i], LANDUSE_ID_PADDY)){
+			    if ((int)m_landuse[i] == LANDUSE_ID_PADDY){
 					//water added into ditches from low embankment, should be added to somewhere else.
 				    float pcp2canal = m_P[i] * m_pcp2canfr_pr * m_embnkfr_pr;
 

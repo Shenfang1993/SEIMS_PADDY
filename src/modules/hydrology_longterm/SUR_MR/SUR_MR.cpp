@@ -158,6 +158,10 @@ int SUR_MR::Execute()
                 else
                     runoffPercentage = m_runoffCo[i] * pow(smFraction, alpha);
 
+				if ((int)m_landuse[i] == LANDUSE_ID_POND){
+					runoffPercentage = 0.f;
+				}
+
                 float surfq = hWater * runoffPercentage;
 				if (surfq > hWater) surfq = hWater;
                 m_infil[i] = hWater - surfq;

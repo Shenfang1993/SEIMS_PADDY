@@ -37,13 +37,13 @@ ORYZA::ORYZA(void) : m_nCells(-1),m_co2(NODATA_VALUE), m_tMean(NULL), m_tMin(NUL
 	m_soilLayers(-1),m_nSoilLayers(NULL), m_soilZMX(NULL), m_soilALB(NULL), m_soilDepth(NULL),
 	m_soilAWC(NULL), m_totSoilAWC(NULL), m_totSoilSat(NULL),m_soilStorage(NULL), m_soilStorageProfile(NULL), 
 	m_sol_cov(NULL),m_sol_rsd(NULL),m_ppt(NULL),m_soilNO3(NULL),  m_snowAcc(NULL),
-	m_plantEPDay(NULL),m_plantUpTkN(NULL), m_plantN(NULL), m_frStrsN(NULL), m_frStrsWa(NULL),
+	m_plantEPDay(NULL),m_plantUpTkN(NULL), m_ricePlantN(NULL), m_frStrsN(NULL), m_frStrsWa(NULL),
 	m_albedo(NULL), m_sol_sat(NULL), m_sol_wpmm(NULL), m_sol_rsdin(NULL),
 	// rice 
 	m_cropsta(NULL), m_epco(NULL), m_ts(NULL), m_sla(NULL),
 	// parameters related to the current day and latitude
 	m_dayL(NULL), m_sinLD(NULL), m_cosLD(NULL), m_dsinbe(NULL), m_sinb(NULL), m_solcon(NULL), 
-	m_rdpdf(NULL), m_rdpdr(NULL),m_cellLat(NODATA_VALUE),
+	m_rdpdf(NULL), m_rdpdr(NULL), m_tslvtr(NODATA_VALUE), m_tshckl(NODATA_VALUE),
 	// parameters related to the growth of rice
 	m_gaid(NULL), m_gai(NULL), m_rapshl(NULL), m_rapppl(NULL), m_fslla(NULL), m_nflv(NODATA_VALUE), m_redf(NODATA_VALUE), 
 	m_eff(NODATA_VALUE), m_gpl(NULL), m_rapl(NULL), m_gpc(NULL), m_rapc(NULL), m_hour(NODATA_VALUE), m_gpcdt(NULL), 
@@ -56,7 +56,10 @@ ORYZA::ORYZA(void) : m_nCells(-1),m_co2(NODATA_VALUE), m_tMean(NULL), m_tMin(NUL
 	// parameter related to the N of plant and soil
 	m_anst(NULL), m_ancrf(NULL), m_anlv(NULL),
 	// rice related parameters, output
-	m_dvs(NULL), m_lai(NULL), m_wrr(NULL), sowDay(NODATA_VALUE)
+	m_dvs(NULL), m_lai(NULL), m_wrr(NULL), m_sowDay(NULL), m_wlvgExs(NULL), m_laiExs(NULL), m_wlvgExp(NULL), m_laiExp(NULL),
+	// p uptake
+	m_PUpDis(NODATA_VALUE), m_frPlantP(NULL), m_frPlantP1(NULL),m_frPlantP2(NULL), m_frPlantP3(NULL), m_frPHUacc(NULL),
+	m_PHUPlt(NULL), m_plantUpTkP(NULL), m_plantP(NULL), m_tBase(NULL), m_soilPsol(NULL), m_frStrsP(NULL)
 {
 }
 
@@ -68,12 +71,14 @@ ORYZA::~ORYZA(void)
 	if (m_lastSoilRootDepth != NULL) Release1DArray(m_lastSoilRootDepth);
 	if (m_plantEPDay != NULL) Release1DArray(m_plantEPDay);
 	if (m_plantUpTkN != NULL) Release1DArray(m_plantUpTkN);
-	if (m_plantN != NULL) Release1DArray(m_plantN);
+	if (m_ricePlantN != NULL) Release1DArray(m_ricePlantN);
 	if (m_frStrsN != NULL) Release1DArray(m_frStrsN);
 	if (m_frStrsWa != NULL) Release1DArray(m_frStrsWa);
 	if (m_biomass != NULL) Release1DArray(m_biomass);
 	if (m_wagt != NULL) Release1DArray(m_wagt);
 	if (m_dvs != NULL) Release1DArray(m_dvs);
+	if (m_wrr != NULL) Release1DArray(m_wrr);
+	if (m_frPlantP != NULL) Release1DArray(m_frPlantP);
 }
 
 void ORYZA::SetValue(const char *key, float value)
@@ -153,6 +158,7 @@ void ORYZA::SetValue(const char *key, float value)
 	else if(StringMatch(sk,VAR_ULLE)) m_ulle = value;
 	else if(StringMatch(sk,VAR_LLDL)) m_lldl = value;
 	else if(StringMatch(sk,VAR_ULDL)) m_uldl = value;
+	else if (StringMatch(sk, VAR_PUPDIS)) m_PUpDis = value;
 	else
 		throw ModelException(MID_RICEGROW, "SetValue", "Parameter " + sk + " does not exist.");
 }
@@ -200,6 +206,12 @@ void ORYZA::Set1DData(const char *key, int n, float *data)
 	else if (StringMatch(sk, VAR_CELL_LAT)) m_celllat = data;
 	else if (StringMatch(sk, VAR_LAIDAY)) m_lai = data;
 	else if (StringMatch(sk, VAR_ANCRF)) m_ancrf = data;
+	else if (StringMatch(sk, VAR_BP1)) m_frPlantP1 = data;
+	else if (StringMatch(sk, VAR_BP2)) m_frPlantP2 = data;
+	else if (StringMatch(sk, VAR_BP3)) m_frPlantP3 = data;
+	else if (StringMatch(sk, VAR_PHUPLT)) m_PHUPlt = data;
+	else if (StringMatch(sk, VAR_T_BASE)) m_tBase = data;
+	
 	else
 		throw ModelException(MID_RICEGROW, "Set1DData", "Parameter " + sk + " does not exist.");
 }
@@ -233,6 +245,7 @@ void ORYZA::Set2DData(const char *key, int nRows, int nCols, float **data)
 	else if (StringMatch(sk, VAR_SOL_NO3)) m_soilNO3 = data;
 	else if (StringMatch(sk, VAR_SOL_UL)) m_sol_sat = data;
 	else if (StringMatch(sk, VAR_SOL_WPMM)) m_sol_wpmm = data;
+	else if (StringMatch(sk, VAR_SOL_SOLP)) m_soilPsol = data;
 	else
 		throw ModelException(MID_RICEGROW, "Set2DData", "Parameter " + sk + " does not exist.");
 }
@@ -243,7 +256,7 @@ float ORYZA::CalHeatUnitDaily(int i)
 
 	for (int k = 1;k <= 24;k++)
 	{
-		float td = m_tMean[i] + 0.5*abs(m_tMax[i] - m_tMin[i])*cos(0.2618 * float(k - 14));
+		float td = m_tMean[i] + 0.5f * abs(m_tMax[i] - m_tMin[i]) * cos(0.2618f * float(k - 14));
 		if ((td > m_tbd) && (td < m_tmd))
 		{
 			if(td > m_tod)
@@ -259,7 +272,7 @@ float ORYZA::CalHeatUnitDaily(int i)
 
 float ORYZA::CalDevelopmentRate(int i)
 {
-	float dl = 0.f, tstr = 0.f, ppfac = 0.f;
+	float dl = 0.f, ppfac = 0.f;
 	float dvr = 0.f;
 	float hu = CalHeatUnitDaily(i);
 
@@ -277,37 +290,39 @@ float ORYZA::CalDevelopmentRate(int i)
 	else if(m_dvs[i] < 1.f)  dvr = m_dvrp * hu;
 	else if (m_dvs[i] > 1.f)  dvr = m_dvrr * hu;
 
-	if(m_cropsta[i] == 3.f)  tstr = m_ts[i];
-	float tshckd = m_shckd * tstr;
-	if((m_cropsta[i] > 3.f) && (m_ts[i] <(tstr + tshckd)))  dvr = 0.f;
+	if(m_cropsta[i] == 3.f){
+		m_tslvtr = m_ts[i];
+		m_tshckl = m_shckl * m_tslvtr;
+	}
+	if((m_cropsta[i] > 3.f) && (m_ts[i] <(m_tslvtr + m_tshckl)))  dvr = 0.f;
 
-	m_dvs[i] = m_dvs[i] + dvr;
+	m_dvs[i] += dvr;
 	return dvr;
 }
 
 void ORYZA::CalDayLengthAndSINB(int i)
 {
-	float DEGTRAD = 0.017453292f, zza, zzcos, zzsin;
-	float dayLenP = 0.f;
-	/// compute the params according to lat
+	/// conversion factor from degrees to radians
+	float DEGTRAD = 0.017453292f;
+	/// compute declination according to lat and day number
 	m_jday = JulianDay(this->m_date);
-
 	float dec = -asin(sin(23.45f * DEGTRAD) * cos(2.f * PI * (m_jday + 10.f) / 365.f));
-	/*m_sinLD[i] = sin (DEGTRAD * 31.2f) * sin (dec);
-	m_cosLD[i] = cos (DEGTRAD * 31.2f) * cos (dec);*/
-
-	m_sinLD[i] = sin (DEGTRAD * m_cellLat) * sin (dec);
-	m_cosLD[i] = cos (DEGTRAD * m_cellLat) * cos (dec);
+	m_sinLD[i] = sin (DEGTRAD * m_celllat[i]) * sin (dec);
+	m_cosLD[i] = cos (DEGTRAD * m_celllat[i]) * cos (dec);
 	float aob = m_sinLD[i] / m_cosLD[i];
 
+	/// compute day length
+	float zza, zzcos, zzsin;
 	if(aob < -1)
 	{
+		/// above polar circle
 		m_dayL[i] = 0;
 		zzcos = 0;
 		zzsin = 1;
 	}
 	else if(aob > 1)
 	{
+		/// within polar circle
 		m_dayL[i] = 24;
 		zzcos = 0;
 		zzsin = -1;
@@ -315,16 +330,13 @@ void ORYZA::CalDayLengthAndSINB(int i)
 	else
 	{
 		m_dayL[i] = 12.f * (1.f + 2.f * asin(aob) / PI);
-		//dayLenP = 12.f * (1.f + 2.0f * asin(aob) / PI);
 		zza = PI * (12.f + m_dayL[i]) / 24.f;
 		zzcos = cos(zza);
 		zzsin = sin(zza);
 	}
-
-	float dsinb = 2.f * 3600.f * (m_dayL[i] * 0.5f * m_sinLD[i] - 12.f * m_cosLD[i] * zzcos / PI);
+	/// dsinbe used to calculate the actual radiation at a specific time of the day
 	m_dsinbe[i] = 2.f * 3600.f * (m_dayL[i] * (0.5f * m_sinLD[i] + 0.2f * pow(m_sinLD[i], 2.f) + 0.1f * pow(m_cosLD[i], 2.f)) - 
 		(12.f * m_cosLD[i] * zzcos + 9.6f * m_sinLD[i] * m_cosLD[i] * zzcos + 2.4f * pow(m_cosLD[i], 2.f) * zzcos * zzsin) / PI);
-
 	m_solcon[i] = 1370.f * (1.f + 0.033f * cos(2.f * PI * m_jday/365.f));
 }
 
@@ -336,17 +348,17 @@ void ORYZA::CalDirectRadiation(int i)
 	{
 		/// sun is above the horizon
 		//  SR : convert from MJ/m2/day to J/m2/day
-		float tmpr1 = m_SR[i] * 1000000.f * m_sinb[i] * (1.f + 0.4f * m_sinb[i])/m_dsinbe[i];
+		float tmpr1 = m_SR[i] * 1.e6 * m_sinb[i] * (1.f + 0.4f * m_sinb[i]) / m_dsinbe[i];
 		atmtr = tmpr1 / (m_solcon[i] * m_sinb[i]);
-		if(atmtr < 0.22)  frdif = 1.f;
-		else if ((atmtr > 0.22) && (atmtr < 0.35))  frdif = 1.f - 6.4f * pow((atmtr - 0.22f), 2.f);
+		if(atmtr < 0.22f)  frdif = 1.f;
+		else if (atmtr < 0.35f)  frdif = 1.f - 6.4f * pow((atmtr - 0.22f), 2.f);
 		else  frdif = 1.47f - 1.66f * atmtr;
 
-		float xx = 0.15f + 0.85f * (1.f - exp(-0.1f/m_sinb[i]));
+		float xx = 0.15f + 0.85f * (1.f - exp(-0.1f / m_sinb[i]));
 		frdif = max(frdif, xx);
 
 		m_rdpdf[i] = tmpr1 * m_frpar * frdif;
-		m_rdpdr[i] = tmpr1 * m_frpar * (1 - frdif);
+		m_rdpdr[i] = tmpr1 * m_frpar * (1.f - frdif);
 	}
 }
 
@@ -359,7 +371,7 @@ void ORYZA::CalLeafAbsorbRadiation(int i)
 	float rfls = rflh * 2.f / (1.f + 2.f * m_sinb[i]);
 	//compute Extinction coefficient
 	float kdf = 0.f;
-	if(m_dvs[i] > 0.f && m_dvs[i] < 0.65f) kdf= 0.4f;
+	if(m_dvs[i] > 0.f && m_dvs[i] < 0.65f) kdf = 0.4f;
 	else if (m_dvs[i] < 1.f) kdf = 0.4f + (0.2f / 0.35f) * (m_dvs[i] - 0.65f);
 	else kdf = 0.6f;
 	float ecpdf = kdf;
@@ -384,7 +396,7 @@ float ORYZA::CalLeafMaxAssimilationRate(float gai, float gaid, float nflv, float
 	float AmaxCO2 = 49.57f / 34.26f * (1.f - exp(-0.208f * (m_co2-60.f)/49.57f));
 	AmaxCO2 = max(0.f, AmaxCO2);
 
-	if((gai > 0.01f) && (m_knf > 0.f))  slni = nflv * gai * m_knf * exp(m_knf * gaid)/(1.f - exp(-m_knf * gai));
+	if((gai > 0.01f) && (m_knf > 0.f))  slni = nflv * gai * m_knf * exp(-m_knf * gaid)/(1.f - exp(-m_knf * gai));
 	else  slni = nflv;
 
 	if(slni > 0.5f)  Amax = 9.5f + (22.f * slni) * redf * AmaxCO2;
@@ -397,34 +409,36 @@ void ORYZA::Sgpl(int i)
 {
 	// Gauss weights for three point Gauss
 	float gsx[3] = {0.112702, 0.500000, 0.887298};
-	float gsw[3] = {0.277778, 0.444444, 0.277778};
-	float gpshl = 0.f, gpsll = 0.f, rapsll = 0.f;
-	// m_gai[i] = m_aLAI;
+	float gsw[3] = {0.277778, 0.444444, 0.277778};		
 
 	CalLeafAbsorbRadiation(i);
 	// calculate redf and nflv
-	if (m_tMean[i] <= 10.f) m_redf = 0.f;
-	else if (m_tMean[i] <= 20.f) m_redf = 0.1f * (m_tMean[i] - 10.f);
-	else if (m_tMean[i] <= 37.f) m_redf = 1.f;
-	else m_redf = max(0.f, (1.f - (m_tMean[i] - 37.f) * 0.2f));
-	if (m_dvs[i] <= 0.16f) m_nflv = 0.54f;
-	else if (m_dvs[i] <= 0.33f) m_nflv = 0.54f + (m_dvs[i] - 0.16f) * 6.25f;
-	else if (m_dvs[i] <= 0.65f) m_nflv = 1.53f - (m_dvs[i] - 0.33f);
-	else if (m_dvs[i] <= 0.8f) m_nflv = 1.222f + (m_dvs[i] - 0.65f) * 2.3f;
-	else if (m_dvs[i] <= 1.f) m_nflv = 1.56f - (m_dvs[i] - 0.8f) * 1.25f;
-	else if (m_dvs[i] <= 1.45f) m_nflv = 1.29f + (m_dvs[i] - 1.f) * 0.16f;
-	else m_nflv = 1.36f - (m_dvs[i] - 1.45f);
+	float redf = 0.f, nflv = 0.f;
+	if (m_tMean[i] <= 10.f) redf = 0.f;
+	else if (m_tMean[i] <= 20.f) redf = 0.1f * (m_tMean[i] - 10.f);
+	else if (m_tMean[i] <= 37.f) redf = 1.f;
+	else redf = max(0.f, (1.f - (m_tMean[i] - 37.f) * 0.2f));
+	if (m_dvs[i] <= 0.16f) nflv = 0.54f;
+	else if (m_dvs[i] <= 0.33f) nflv = 0.54f + (m_dvs[i] - 0.16f) * 6.25f;
+	else if (m_dvs[i] <= 0.65f) nflv = 1.53f - (m_dvs[i] - 0.33f);
+	else if (m_dvs[i] <= 0.8f) nflv = 1.222f + (m_dvs[i] - 0.65f) * 2.3f;
+	else if (m_dvs[i] <= 1.f) nflv = 1.56f - (m_dvs[i] - 0.8f) * 1.25f;
+	else if (m_dvs[i] <= 1.45f) nflv = 1.29f + (m_dvs[i] - 1.f) * 0.16f;
+	else nflv = 1.36f - (m_dvs[i] - 1.45f);
+	
+	float gpshl = 0.f;
+	float Amax2 = CalLeafMaxAssimilationRate(m_gai[i], m_gaid[i], nflv, redf);
+	if(Amax2 > 0.f)  gpshl = Amax2 * (1.f - exp(-m_rapshl[i] * m_eff / Amax2));
 
-	float Amax2 = CalLeafMaxAssimilationRate(m_gai[i], m_gaid[i], m_nflv, m_redf);
-	if(Amax2 > 0 )  gpshl = Amax2 * (1.f - exp(-m_rapshl[i] * m_eff / Amax2));
-
+	float gpsll = 0.f, rapsll = 0.f;
 	for(int k = 0;k < 3;k++)
 	{
-		float tmpr1 = m_rapshl[i] + rapsll * gsx[k];
-		if(Amax2 > 0)  gpsll = gpsll + Amax2 * (1.f - exp(-tmpr1 * m_eff / Amax2)) * gsw[k];
+		float tmpr1 = m_rapshl[i] + m_rapppl[i] * gsx[k];
+		if(Amax2 > 0)  gpsll += Amax2 * (1.f - exp(-tmpr1 * m_eff / Amax2)) * gsw[k];
 
-		rapsll = rapsll + tmpr1 * gsw[k];
+		rapsll += tmpr1 * gsw[k];
 	}
+	// local assimilation rate(GPL) and rate of absorption of PARby canopy(RAPL)
 	m_gpl[i] = m_fslla[i] * gpsll + (1.f - m_fslla[i]) * gpshl;
 	m_rapl[i] = m_fslla[i] * rapsll + (1.f - m_fslla[i]) * m_rapshl[i];
 }
@@ -441,8 +455,8 @@ void ORYZA::CalCanopyAssimilationRate(int i)
 		m_gaid[i] = m_gai[i] * gsx[k];
 		Sgpl(i);
 		// Integration of local assimilation rate to canopy assimilation (GPC) and absorption of PAR by canopy (RAPC)
-		m_gpc[i] = m_gpc[i] + m_gpl[i] * gsw[k];
-		m_rapc[i] = m_rapc[i] + m_rapl[i] * gsw[k];
+		m_gpc[i] += m_gpl[i] * gsw[k];
+		m_rapc[i] += m_rapl[i] * gsw[k];
 	}
 	m_gpc[i] = m_gpc[i] * m_gai[i];
 	m_rapc[i] = m_rapc[i] * m_gai[i];
@@ -454,17 +468,22 @@ void ORYZA::CalDailyCanopyPhotosynthesisRate(int i)
 	float gsx[3] = {0.112702, 0.500000, 0.887298};
 	float gsw[3] = {0.277778, 0.444444, 0.277778};
 
-	//CalDayLengthAndSINB(i);
+	CalDayLengthAndSINB(i);
 
+	// for every day, these variables should be initialized to 0	
+	m_gpcdt[i] = 0.f;
+	m_rapcdt[i] = 0.f;
 	for (int k = 0;k < 3;k++)
 	{
 		m_hour = 12.f + m_dayL[i] * 0.5f * gsx[k];
 
+		m_gpc[i] = 0.f;
+		m_rapc[i] = 0.f;
 		CalDirectRadiation(i);
 		CalCanopyAssimilationRate(i);
 
-		m_gpcdt[i] = m_gpcdt[i] + m_gpc[i] * gsw[k];
-		m_rapcdt[i] = m_rapcdt[i] + m_rapc[i] * gsw[k];
+		m_gpcdt[i] += m_gpc[i] * gsw[k];
+		m_rapcdt[i] += m_rapc[i] * gsw[k];
 	}
 	// Integration of instantaneous assimilation/absorption rate to a daily total (GPCDT/RAPCDT)
 	m_gpcdt[i] = m_gpcdt[i] * m_dayL[i];
@@ -497,7 +516,7 @@ void ORYZA::CalSpikeletAndGrainRate(int i)
 	// there is a second requirement that GRAINS (Fortran logical function whether grains are formed) is true
 	if (m_dvs[i] > 1.2f)
 	{
-		float sf1 = 1.f - (4.6f + 0.054f * pow(m_coldTT[i], 1.56f))/100.f;
+		float sf1 = 1.f - (4.6f + 0.054f * pow(m_coldTT[i], 1.56f)) / 100.f;
 		sf1 = min(1.f, max(0.f, sf1));
 		float xx = m_tfert[i] / m_ntfert;
 		float sf2 = 1.f / (1.f + exp(0.853f * (xx - 36.6f)));
@@ -514,10 +533,7 @@ void ORYZA::LAI(int i)
 	float rgrl = m_rgrlMX - (1.f - m_frStrsN[i]) * (m_rgrlMX - m_rgrlMN);
 	float x = 1.f, testSet = 0.0001f;
 	bool flag = false;
-	float wlvgExs = 0.f, laiExs = 0.f;
 	float hu = CalHeatUnitDaily(i);
-	// Temperature sum for leaf area development at transplanting
-	float tslvtr = 0.f, tshckl = 0.f;
 
 	// for transplanted rice
 	if(m_cropsta[i] < 3.f)
@@ -526,8 +542,8 @@ void ORYZA::LAI(int i)
 		if(m_lai[i] < 1.f)
 		{
 			m_gLai = m_lai[i] * rgrl * hu;
-			wlvgExs = m_wlvg[i];
-			laiExs = m_lai[i];
+			m_wlvgExs[i] = m_wlvg[i];
+			m_laiExs[i] = m_lai[i];
 		}
 		else
 		{
@@ -536,7 +552,7 @@ void ORYZA::LAI(int i)
 			if(flag)  m_gLai = ((m_wlvg[i] + m_rwlvg[i]) * m_sla[i]) - m_lai[i];
 			else
 			{
-				float gLai1 = ((m_wlvg[i] + m_rwlvg[i] - wlvgExs) * m_sla[i] + laiExs) - m_lai[i];
+				float gLai1 = ((m_wlvg[i] + m_rwlvg[i] - m_wlvgExs[i]) * m_sla[i] + m_laiExs[i]) - m_lai[i];
 				float gLai2 = ((m_wlvg[i] + m_rwlvg[i]) * m_sla[i]) - m_lai[i];
 				m_gLai = (gLai1 + gLai2) / (x + 1.f);
 				x = x + 1.f;
@@ -546,21 +562,19 @@ void ORYZA::LAI(int i)
 	else if(m_cropsta[i] == 3)
 	{
 		// Transplanting effects: dilution and shock-setting
-		tslvtr = m_ts[i];
-		tshckl = m_shckl * tslvtr;
 		m_gLai = (m_lai[i] * m_nh * m_nplh / m_nplsb) - m_lai[i];
 	}
 	else if(m_cropsta[i] == 4)
 	{
 		// After transplanting: main crop growth
-		if (m_ts[i] < (tslvtr + tshckl)) m_gLai = 0;
+		if (m_ts[i] < (m_tslvtr + m_tshckl)) m_gLai = 0;
 		else
 		{
-			if((m_lai[i] < 0.f) && (m_dvs[i] <1.f))
+			if((m_lai[i] < 1.f) && (m_dvs[i] < 1.f))
 			{
 				m_gLai = m_frStrsWa[i] * m_lai[i] * rgrl * hu;
-				wlvgExs = m_wlvg[i];
-				laiExs = m_lai[i];
+				m_wlvgExp[i] = m_wlvg[i];
+				m_laiExp[i] = m_lai[i];
 			}
 			else
 			{
@@ -569,7 +583,7 @@ void ORYZA::LAI(int i)
 				if(flag)  m_gLai = ((m_wlvg[i] + m_rwlvg[i]) * m_sla[i]) - m_lai[i];
 				else
 				{
-					float gLai1 = ((m_wlvg[i] + m_rwlvg[i] - wlvgExs) * m_sla[i] + laiExs) - m_lai[i];
+					float gLai1 = ((m_wlvg[i] + m_rwlvg[i] - m_wlvgExp[i]) * m_sla[i] + m_laiExp[i]) - m_lai[i];
 					float gLai2 = ((m_wlvg[i] + m_rwlvg[i]) * m_sla[i]) - m_lai[i];
 					m_gLai = (gLai1 + gLai2) / (x + 1.f);
 					x = x + 1.f;
@@ -585,28 +599,26 @@ void ORYZA::CalRiceGrowth(int i)
 	float hu = CalHeatUnitDaily(i);
 	float dvr = CalDevelopmentRate(i);
 	// 2.compute the development stage of current day
-	//m_dvs[i] =m_dvs[i] + dvr; 
 	if(m_dvs[i] < 2.f)    // rice growing
 	{
-		// if(m_cropsta[i] == 1) m_lai[i] = m_lape * m_nplsb; //re-initialize LAI at day of emergence
-		if(m_cropsta[i] == 3) m_zrt[i] = m_zrttr; // re-initialize rooting depth at day of transplanting
+		// re-initialize rooting depth at day of transplanting
+		if(m_cropsta[i] == 3) m_zrt[i] = m_zrttr; 
 
-		//if (m_frStrsWa[i] > 0.f) CalPlantNUptake(i);
-		// Computation of weather variables
-		float m_tmpCov = m_tmpsb; 
-		float m_tav = (m_tMax[i] + m_tmpCov + m_tMin[i]) / 2.f;
-		float m_tavD = (m_tav + m_tMax[i]) / 2.f;
-		float m_co2EFF = (1.f - exp(-0.00305f * m_co2 - 0.222f)) / (1.f - exp(-0.00305f * 340.f - 0.222f));
-		if(0.f < m_tavD <= 10.f) m_eff = 0.54f * m_co2EFF; // compute eff use linear_interp
-		else m_eff = (0.54f - 0.06f * (m_tavD - 10.f)) * m_co2EFF;
+		// compute light-use efficiency of a single leaf(EFF) use linear_interp
+		float tmpCov = m_tmpsb; 
+		float tav = (m_tMax[i] + tmpCov + m_tMin[i]) / 2.f;
+		float tavD = (tav + m_tMax[i]) / 2.f;             
+		float co2EFF = (1.f - exp(-0.00305f * m_co2 - 0.222f)) / (1.f - exp(-0.00305f * 340.f - 0.222f));
+		if(tavD > 0.f && tavD <= 10.f) m_eff = 0.54f * co2EFF; 
+		else m_eff = (0.54f - 0.006f * (tavD - 10.f)) * co2EFF;
 
 		// Leaf rolling under drought stress (only for photosynthesis)
-		float m_laiRol = m_lai[i] * (0.5f * m_frStrsWa[i] + 0.5);
+		float laiRol = m_lai[i] * (0.5f * m_frStrsWa[i] + 0.5f);
 		float ssga = 0.f;
 		if(m_dvs[i] >=0.f && m_dvs[i] < 0.9f) ssga = 0.0003f;
 		else ssga = 0.0003f - 0.00025f * (m_dvs[i] - 0.9f);
 		m_sai = ssga * m_wst[i];
-		m_aLAI = m_laiRol + 0.5f * m_sai;
+		m_aLAI = laiRol + 0.5f * m_sai;
 
 		CalDailyCanopyPhotosynthesisRate(i);
 
@@ -618,7 +630,7 @@ void ORYZA::CalRiceGrowth(int i)
 		m_aLAI = m_lai[i] + 0.5f * m_sai;
 		// drought stress will decreases the rate 
 		m_dtga[i] = m_dtga[i] * m_frStrsWa[i];
-		//compute the fraction of dry matter to the shoot(FSH), leave(FLV), stems(FST), panicle(FSO), root(FRT), leaf death(DRLV)
+		//compute the fraction of dry matter to the shoots(FSH), leave(FLV), stems(FST), panicle(FSO), root(FRT), leaf death(DRLV)
 		if(m_dvs[i] > 0.f && m_dvs[i] <= 1.f)
 		{
 			m_fsh = m_aFsh + m_bFsh * m_dvs[i];
@@ -652,22 +664,22 @@ void ORYZA::CalRiceGrowth(int i)
 		}
 		m_frt = 1.f - m_fsh;
 		// compute the loss of leaves and stems
-		if(m_plantN[i] >= 0.f && m_plantN[i] <= 1.f) m_nsllv = 1.f;
-		else if(m_plantN[i] < 2.f) m_nsllv = 1.f + 0.2f * (m_plantN[i] - 1.f);
+		if(m_ricePlantN[i] >= 0.f && m_ricePlantN[i] <= 1.f) m_nsllv = 1.f;
+		else if(m_ricePlantN[i] < 2.f) m_nsllv = 1.f + 0.2f * (m_ricePlantN[i] - 1.f);
 		else m_nsllv = 1.5f;
 		// the death or loss rate of leaves
 		float llv = m_nsllv * m_wlvg[i] * m_drlv; 
-		if(m_dvs[i] > 1.f)  m_lstr = m_wst[i] / m_tclstr;
+		if(m_dvs[i] > 1.f)  m_lstr = m_wstr[i] / m_tclstr;
 		else m_lstr = 0.f;
 		// Maintenance requirements
-		m_teff = pow(m_q10, (m_tav - m_tref) / 10.f);
+		m_teff = pow(m_q10, (tav - m_tref) / 10.f);
 		float mnDVS = m_wlvg[i] / (m_wlvg[i] + m_wlvd[i]);
 		float rmcr = (m_wlvg[i] * m_mainLV + m_wst[i] * m_mainST + m_wso[i] * m_mainSO + m_wrt[i] * m_mainRT) * m_teff * mnDVS;
 		// Carbohydrate requirement for dry matter production
 		float crGCR = m_fsh * (m_crgLV * m_flv + m_crgST * m_fst * (1.f - m_fstr) + m_crgSTR * m_fstr * m_fst + m_crgSO * m_fso) + m_crgRT * m_frt;
 		// Gross and net growth rate of crop (GCR, NGCR)
 		m_gcr[i] = ((m_dtga[i] * 30.f / 44.f) - rmcr + (m_lstr * m_lrstr * m_fcSTR * 30.f / 12.f)) / crGCR;
-		float xx = m_gcr[i] - m_lstr * m_lrstr *m_fcSTR *30.f / 12.f;
+		float xx = m_gcr[i] - m_lstr * m_lrstr *m_fcSTR * 30.f / 12.f;
 		float ngcr = max(0, xx);
 		// Intermediate variable for planting density, used to calculate the reduction in net weight 
 		float pltr = 1.f;
@@ -682,7 +694,7 @@ void ORYZA::CalRiceGrowth(int i)
 		glv = m_gcr[i] * m_fsh * m_flv - rwlvg1;
 		float rwlvg = glv - llv;
 		gst = m_gcr[i] * m_fsh * m_fst * (1.f - m_fstr) - gst1;
-		float gstr = m_gcr[i] * m_fsh * m_fstr - rwstr1;
+		float gstr = m_gcr[i] * m_fsh * m_fstr * m_fst - rwstr1;
 		float rwstr = gstr - m_lstr;
 		gso = m_gcr[i] * m_fsh * m_fso;
 		float ggr = 0.f;
@@ -700,10 +712,10 @@ void ORYZA::CalRiceGrowth(int i)
 		float co2ST = 44.f / 12.f * (m_crgST *12.f / 30.f - m_fcST);
 		float co2STR = 44.f / 12.f * (m_crgSTR *12.f / 30.f - m_fcSTR);
 		float co2SO = 44.f / 12.f * (m_crgSO *12.f / 30.f - m_fcSO);
-		float m_rgcr = (grt + grt1) * co2RT + (glv + rwlvg1) * co2LV + (gst + gst1) * co2ST + gso * co2SO + 
+		float rgcr = (grt + grt1) * co2RT + (glv + rwlvg1) * co2LV + (gst + gst1) * co2ST + gso * co2SO + 
 			(gstr +rwstr1) * co2STR + (1.f - m_lrstr) * m_lstr * m_fcSTR * 44.f / 12.f;
 		float ctrans = rwlvg1 * m_fcLV + gst1 * m_fcST + rwstr1 * m_fcSTR +grt1 * m_fcRT;
-		float rtnass = ((m_dtga[i] * 30.f / 44.f - rmcr) * 44.f / 30.f) - m_rgcr - (ctrans * 44.f / 12.f);
+		float rtnass = ((m_dtga[i] * 30.f / 44.f - rmcr) * 44.f / 30.f) - rgcr - (ctrans * 44.f / 12.f);
 
 		// update the state variables like dvs, lai, wso, wrr	
 		// Integrate rate variables
@@ -722,8 +734,8 @@ void ORYZA::CalRiceGrowth(int i)
 		m_wst[i] = m_wstr[i] + m_wsts[i]; // stem
 		m_wlv[i] = m_wlvg[i] + m_wlvd[i]; // leaf
 		m_wagt[i] = m_wlv[i] + m_wst[i] + m_wso[i]; // dry weight above ground
-		m_biomass[i] = m_wagt[i] + m_wrt[i];
-		m_frRoot[i] = m_wrt[i] / m_biomass[i];
+		/*m_biomass[i] = m_wagt[i] + m_wrt[i];
+		m_frRoot[i] = m_wrt[i] / m_biomass[i];*/
 		// Leaf area index and total area index (leaves + stems)
 		m_lai[i] += m_gLai;
 		m_aLAI = m_lai[i] + 0.5f * m_sai;
@@ -736,7 +748,7 @@ void ORYZA::CalRiceGrowth(int i)
 void ORYZA::CalPlantETAndWStress(int i)
 {
 	// Only stress in main field after day of transplanting
-	if(m_cropsta[i] == 4){
+	if(m_cropsta[i] == 4 && m_ppt[i] != 0.f){
 		// compute the potential transpiration rate per unit of root length
 		float trrm = m_ppt[i] / (m_zrt[i] + 1.0e-10);
 		float trw = 0.f, lrav = 0.f, zll = 0.f, leav = 0.f, ldav = 0.f;
@@ -764,15 +776,15 @@ void ORYZA::CalPlantETAndWStress(int i)
 			mskpa[j] = musc[j] / 10.f;
 			// Leaf-rolling factor	
 			float lr = (log10(mskpa[j]) - log10(m_llls)) / (log10(m_ulls) - log10(m_llls));
-			lr = min(0.f, max(1.f, lr));
+			lr = max(0.f, min(1.f, lr));
 			lrav = lrav + zrtl / m_zrt[i] * lr;	
 			// Relative leaf expansion rate factor
 			float le = (log10(mskpa[j]) - log10(m_llle)) / (log10(m_ulle) - log10(m_llle));
-			le = min(0.f, max(1.f, le));
+			le = max(0.f, min(1.f, le));
 			leav = leav + zrtl / m_zrt[i] * le;
 			// Relative death rate factor
 			float ld = (log10(mskpa[j]) - log10(m_lldl)) / (log10(m_uldl) - log10(m_lldl));
-			ld = min(0.f, max(1.f, ld));
+			ld = max(0.f, min(1.f, ld));
 			ldav = ldav + zrtl / m_zrt[i] * ld;
 
 			// Relative transpiration ratio (actual/potential)
@@ -781,7 +793,7 @@ void ORYZA::CalPlantETAndWStress(int i)
 			}else{
 				trr = 2.f / (1.f + exp(0.003297f * mskpa[j]));
 			}
-			trr = min(0.f, max(1.f, trr));
+			trr = max(0.f, min(1.f, trr));
 
 			float wla = max(0.f, (m_soilStorage[i][j] - m_sol_wpmm[i][j]) * zrtl * 1000.f);
 			float trwl = min(wla, trr * zrtl * trrm);
@@ -805,75 +817,128 @@ void ORYZA::CalPlantETAndWStress(int i)
 
 void ORYZA::CalPlantNUptake(int i)
 {
-	// compute N demand of crop
-	float nMaxL, nMinL, nMinSO;
-	if (m_dvs[i] < 0.4f) nMaxL = 0.053f;
-	else nMaxL = 0.053f - m_nMaxL * (m_dvs[i] - 0.4f);
-	nMinL = 0.025f - m_nMinL * m_dvs[i];
-	if (m_ancrf[i] < 50.f) nMinSO = 0.006f - m_anMinSO * m_ancrf[i];
-	else if(m_ancrf[i] < 400.f) nMinSO = 0.0008f + m_bnMinSO * (m_ancrf[i] - 50.f);
-	else nMinSO = 0.017f;
-	float LeafDemandN = nMaxL * (m_wlvg[i] + glv) - m_anlv[i];
-	float StemDemandN = nMaxL * 0.5f * (m_wst[i] + gst) - m_anst[i];
-	float SODemandNMax = m_nMaxSO * gso;
-	float SODemandNMin = nMinSO * gso;
-	// Calculate translocation of N from organs, No translocation before DVS = 0.95
-	float aTNlv, aTNst, aTN, ntso, aTnrt;
-	if (m_dvs[i] < 0.95f)
+	if(m_cropsta[i] == 4){
+		// compute N demand of crop
+		float nMaxL, nMinL, nMinSO;
+		if (m_dvs[i] < 0.4f) nMaxL = 0.053f;
+		else nMaxL = 0.053f - m_nMaxL * (m_dvs[i] - 0.4f);
+		nMinL = 0.025f - m_nMinL * m_dvs[i];
+		if (m_ancrf[i] < 50.f) nMinSO = 0.006f - m_anMinSO * m_ancrf[i];
+		else if(m_ancrf[i] < 400.f) nMinSO = 0.0008f + m_bnMinSO * (m_ancrf[i] - 50.f);
+		else nMinSO = 0.017f;
+		float LeafDemandN = nMaxL * (m_wlvg[i] + glv) - m_anlv[i];
+		float StemDemandN = nMaxL * 0.5f * (m_wst[i] + gst) - m_anst[i];
+		float SODemandNMax = m_nMaxSO * gso;
+		float SODemandNMin = nMinSO * gso;
+		// Calculate translocation of N from organs, No translocation before DVS = 0.95
+		float aTNlv, aTNst, aTN, ntso, aTnrt;
+		if (m_dvs[i] < 0.95f)
+		{
+			aTNlv = 0.f;
+			aTNst = 0.f;
+			aTN = 1.f;
+			ntso = 0.f;
+			aTnrt = 0.f;
+		}
+		else
+		{
+			aTNlv = max(0.f, m_anlv[i] - m_wlvg[i] * m_rfnlv);
+			aTNst = max(0.f, m_anst[i] - m_wst[i] * m_rfnst);
+			aTnrt = (aTNlv + aTNst) * m_fntrt;
+			aTN = aTNlv + aTNst + aTnrt;
+			ntso = aTN / m_tcntrf;
+			ntso = max(ntso, SODemandNMin);
+			ntso = min(ntso, SODemandNMax);
+		}
+		// Actual N translocation rates from plant organs, ATN should not be 0
+		float ntlv = ntso * aTNlv / aTN;
+		float ntst = ntso * aTNst / aTN;
+		float ntrt = ntso * aTnrt / aTN;
+		// Calculate nitrogen uptake
+		// float n_reduc = 300.f; /// nitrogen uptake reduction factor (not currently used; defaulted 300.)
+		float tnsoil = 0.f;
+		for (int k = 0; k < m_nSoilLayers[i]; k++){
+			tnsoil += m_soilNO3[i][k];
+		}
+		// Available N uptake is mimimum of soil supply and maximum crop uptake
+		float nupp = min(8.f, tnsoil);
+		float totNDemand = (LeafDemandN + ntlv) + (StemDemandN + ntst) + (SODemandNMax - ntso);
+		float naLV = max(0.f, min(LeafDemandN + ntlv, nupp * (LeafDemandN + ntlv) / totNDemand));
+		float naST = max(0.f, min(StemDemandN + ntst, nupp * (StemDemandN + ntst) / totNDemand));
+		float naSO = max(0.f, min(SODemandNMax - ntso, nupp* (SODemandNMax - ntso) / totNDemand));	
+		m_anst[i] += (naST - ntst);
+		m_plantUpTkN[i] = naLV + naST + naSO;
+		if (m_plantUpTkN[i] < 0.f) m_plantUpTkN[i] = 0.f;
+		m_ricePlantN[i] += m_plantUpTkN[i];
+		// take up N from soil
+		float tmp = m_plantUpTkN[i];
+		for (int l = 0; l < (int)m_nSoilLayers[i]; l++)
+		{
+			float uno3l = min(tmp, m_soilNO3[i][l]);
+			m_soilNO3[i][l] -= uno3l;
+			tmp -= uno3l;
+		}
+		float nstan = 0.f, nlvan = 0.f;
+		if(m_dvs[i] < 1.f)
+		{
+			nstan = naST - ntst;
+			nlvan = naLV - ntlv;
+		}
+		m_ancrf[i] += (nstan + nlvan);
+		m_anlv[i] += naLV;
+		float fnlv = max(m_anlv[i] / m_wlvg[i], 0.5 * m_nMinL);
+		m_frStrsN[i] = (fnlv - 0.9 * nMaxL) / (nMaxL - 0.9 * nMaxL);
+		m_frStrsN[i] = min(max(m_frStrsN[i], 0), 1.f);
+	}
+	else{
+		m_frStrsN[i] = 1.f;
+	}
+	
+}
+
+void ORYZA::PlantPhosphorusUptake(int i)
+{
+	float uobp = PGCommon::getNormalization(m_PUpDis);
+	/// Update accumulated heat units for the plant
+	float delg = 0.f;
+	if (m_PHUPlt[i] > 0.1)
+		delg = (m_tMean[i] - m_tBase[i]) / m_PHUPlt[i];
+	if (delg < 0.f)
+		delg = 0.f;
+	m_frPHUacc[i] += delg;
+	//// determine shape parameters for plant phosphorus uptake equation, from readplant.f
+	m_frPlantP[i] = PGCommon::NPBiomassFraction(m_frPlantP1[i], m_frPlantP2[i], m_frPlantP3[i], m_frPHUacc[i]);
+	float up2 = 0.f; /// optimal plant phosphorus content
+	float uapd = 0.f; /// plant demand of phosphorus
+	float upmx = 0.f; /// maximum amount of phosphorus that can be removed from the soil layer
+	float uapl = 0.f; /// amount of phosphorus removed from layer
+	float gx = 0.f; /// lowest depth in layer from which phosphorus may be removed
+	up2 = m_frPlantP[i] * (m_wagt[i] + m_wrt[i]);
+	if (up2 < m_plantP[i]) up2 = m_plantP[i];
+	uapd = up2 - m_plantP[i];
+	uapd *= 1.5f;   /// luxury p uptake
+	m_frStrsP[i] = 1.f;
+	int ir = 0;
+	if (uapd < UTIL_ZERO) return;
+	for (int l = 0; l < m_nSoilLayers[i]; l++)
 	{
-		aTNlv = 0.f;
-		aTNst = 0.f;
-		aTN = 1.f;
-		ntso = 0.f;
-		aTnrt = 0.f;
+		if (ir > 0) break;
+		if (m_zrt[i] <= m_soilDepth[i][l])
+		{
+			gx = m_zrt[i];
+			ir = 1;
+		}
+		else
+			gx = m_soilDepth[i][l];
+		upmx = uapd * (1.f - exp(-m_PUpDis * gx / m_zrt[i])) / uobp;
+		uapl = min(upmx - m_plantUpTkP[i], m_soilPsol[i][l]);
+		m_plantUpTkP[i] += uapl;
+		m_soilPsol[i][l] -= uapl;
 	}
-	else
-	{
-		aTNlv = max(0.f, m_anlv[i] - m_wlvg[i] * m_rfnlv);
-		aTNst = max(0.f, m_anst[i] - m_wst[i] * m_rfnst);
-		aTnrt = (aTNlv + aTNst) * m_fntrt;
-		aTN = aTNlv + aTNst + aTnrt;
-		ntso = aTN / m_tcntrf;
-		ntso = max(ntso, SODemandNMin);
-		ntso = min(ntso, SODemandNMax);
-	}
-	// Actual N translocation rates from plant organs, ATN should not be 0
-	float ntlv = ntso * aTNlv / aTN;
-	float ntst = ntso * aTNst / aTN;
-	float ntrt = ntso * aTnrt / aTN;
-	// Calculate nitrogen uptake
-	// float n_reduc = 300.f; /// nitrogen uptake reduction factor (not currently used; defaulted 300.)
-	float tnsoil = 0.f;
-	for (int k = 0; k < m_nSoilLayers[i]; k++){
-		tnsoil += m_soilNO3[i][k];
-	}
-	// Available N uptake is mimimum of soil supply and maximum crop uptake
-	float nupp = min(8.f, tnsoil);
-	float totNDemand = (LeafDemandN + ntlv) + (StemDemandN + ntst) + (SODemandNMax - ntso);
-	float naLV = max(0.f, min(LeafDemandN + ntlv, nupp * (LeafDemandN + ntlv) / totNDemand));
-	float naST = max(0.f, min(StemDemandN + ntst, nupp * (StemDemandN + ntst) / totNDemand));
-	float naSO = max(0.f, min(SODemandNMax - ntso, nupp* (SODemandNMax - ntso) / totNDemand));	
-	m_anst[i] += (naST - ntst);
-	m_plantUpTkN[i] = naLV + naST + naSO;
-	if (m_plantUpTkN[i] < 0.f) m_plantUpTkN[i] = 0.f;
-	m_plantN[i] += m_plantUpTkN[i];
-	for (int l = 0; l < (int)m_nSoilLayers[i]; l++)
-	{
-		float uno3l = min(m_plantUpTkN[i], m_soilNO3[i][l]);
-		m_soilNO3[i][l] -= uno3l;
-	}
-	float nstan = 0.f, nlvan = 0.f;
-	if(m_dvs[i] < 1.f)
-	{
-		nstan = naST - ntst;
-		nlvan = naLV - ntlv;
-	}
-	m_ancrf[i] += (nstan + nlvan);
-	m_anlv[i] += naLV;
-	float fnlv = m_anlv[i] / m_wlvg[i];
-	m_frStrsN[i] = (fnlv - 0.9 * nMaxL) / (nMaxL - 0.9 * nMaxL);
-	m_frStrsN[i] = max(m_frStrsN[i], 0);
-	m_frStrsN[i] = min(m_frStrsN[i], 1.f);
+	if (m_plantUpTkP[i] < 0.f) m_plantUpTkP[i] = 0.f;
+	m_plantP[i] += m_plantUpTkP[i];
+	/// compute phosphorus stress
+	PGCommon::calPlantStressByLimitedNP(m_plantP[i], up2, &m_frStrsP[i]);
 }
 
 int ORYZA::Execute()
@@ -881,7 +946,7 @@ int ORYZA::Execute()
 	CheckInputData();
 	initialOutputs();
 
-#pragma omp parallel for
+//#pragma omp parallel for
 	for (int i = 0; i < m_nCells; i++)
 	{
 		/// calculate albedo in current day
@@ -896,39 +961,41 @@ int ORYZA::Execute()
 		else
 			m_albedo[i] = 0.8f;
 		/// calculate residue on soil surface for current day
-		m_sol_cov[i] = max((m_wagt[i] + m_sol_rsd[i][0]), 0.f);
-		/// calculate the parameters related to the lat and date
-		m_cellLat = m_celllat[i];
-		CalDayLengthAndSINB(i);
+		m_sol_cov[i] = max((m_wagt[i] + m_sol_rsd[i][0]), 0.f);		
 
 		if (m_cropsta[i] > 0.f)      /// rice growing
 		{
-			CalPlantETAndWStress(i);
-			CalRiceGrowth(i);
-			if (m_frStrsWa[i] > 0.f) CalPlantNUptake(i);
-
-			if (m_cropsta[i] == 1.f){
-				sowDay = JulianDay(this->m_date);
-			}
 			float day = JulianDay(this->m_date);
-			if (day <= (sowDay + m_sbdur)){
+			if (day == 200){
+				bool flag = true;
+			}
+			/// calculate transpiration and water stress
+			CalPlantETAndWStress(i);
+			/// calculate rice growth, dvs, yield .et
+			CalRiceGrowth(i);
+			/// calculate N uptake
+			CalPlantNUptake(i);
+			PlantPhosphorusUptake(i);
+
+			/// update crop status code for transplanted rice
+			if (m_cropsta[i] == 1.f){
+				m_sowDay[i] = JulianDay(this->m_date);
+			}
+			
+			if (day < (m_sowDay[i] + m_sbdur)){
 				m_cropsta[i] = 2.f;
 			}
-			else if (day == (sowDay + m_sbdur)){
+			else if (day == (m_sowDay[i] + m_sbdur)){
 				m_cropsta[i] = 3.f;
 			}
 			else m_cropsta[i] = 4.f;
 		}
-		if (i == 70){
-			ofstream fout;
-			fout.open("j:\\dvs.txt", ios::app);
-			fout << m_dvs[70] << "\n";
-			fout << flush;
-			fout.close();
-		}
-		
 		/*if (i == 70){
-			cout <<"dvs:" << m_dvs[i] << endl;
+		ofstream fout;
+		fout.open("j:\\cropsta.txt", ios::app);
+		fout << m_cropsta[70] << "\n";
+		fout << flush;
+		fout.close();
 		}*/
 	}
 	return true;
@@ -1053,8 +1120,6 @@ void ORYZA::initialOutputs()
 		Initialize1DArray(m_nCells, m_dvs, 0.f);
 	if(m_ancrf == NULL)
 		Initialize1DArray(m_nCells, m_ancrf, 0.f);
-	/*if(m_cellLat == NULL)
-	Initialize1DArray(m_nCells, m_cellLat, 0.f);*/
 	if(m_gai == NULL)
 		Initialize1DArray(m_nCells, m_gai, 0.f);
 	if(m_gaid == NULL)
@@ -1079,8 +1144,8 @@ void ORYZA::initialOutputs()
 		Initialize1DArray(m_nCells, m_rapcdt, 0.f);
 	if(m_dtga ==NULL)
 		Initialize1DArray(m_nCells, m_dtga, 0.f);
-	if (m_plantN == NULL)
-		Initialize1DArray(m_nCells, m_plantN, 0.f);
+	if (m_ricePlantN == NULL)
+		Initialize1DArray(m_nCells, m_ricePlantN, 0.f);
 	if (m_gcr == NULL)
 		Initialize1DArray(m_nCells, m_gcr, 0.f);
 	if (m_wsts == NULL)
@@ -1105,7 +1170,26 @@ void ORYZA::initialOutputs()
 		Initialize1DArray(m_nCells, m_plantUpTkN, 0.f);
 	if (m_rwlvg == NULL)
 		Initialize1DArray(m_nCells, m_rwlvg, 0.f);
-
+	if (m_sowDay == NULL)
+		Initialize1DArray(m_nCells, m_sowDay, 0.f);
+	if (m_wlvgExs == NULL)
+		Initialize1DArray(m_nCells, m_wlvgExs, 0.f);
+	if (m_laiExs == NULL)
+		Initialize1DArray(m_nCells, m_laiExs, 0.f);
+	if (m_wlvgExp == NULL)
+		Initialize1DArray(m_nCells, m_wlvgExp, 0.f);
+	if (m_laiExp == NULL)
+		Initialize1DArray(m_nCells, m_laiExp, 0.f);
+	if (m_frPlantP == NULL)
+		Initialize1DArray(m_nCells, m_frPlantP, 0.f);
+	if (m_frPHUacc == NULL)
+		Initialize1DArray(m_nCells, m_frPHUacc, 0.f);
+	if (m_plantP == NULL)
+		Initialize1DArray(m_nCells, m_plantP, 0.f);
+	if(m_plantUpTkP == NULL)
+		Initialize1DArray(m_nCells, m_plantUpTkP, 0.f);
+	if (m_frStrsP == NULL)
+		Initialize1DArray(m_nCells, m_frStrsP, 1.f);
 }
 void ORYZA::Get1DData(const char *key, int *n, float **data)
 {
@@ -1113,10 +1197,11 @@ void ORYZA::Get1DData(const char *key, int *n, float **data)
 	string sk(key);
 	*n = m_nCells;
 	if (StringMatch(sk, VAR_LAST_SOILRD)) *data = m_lastSoilRootDepth;
-	else if (StringMatch(sk, VAR_PLANT_N)) *data = m_plantN;
+	else if (StringMatch(sk, VAR_RICE_PLANT_N)) *data = m_ricePlantN;
 	else if (StringMatch(sk, VAR_FR_STRSWTR)) *data = m_frStrsWa;
 	else if (StringMatch(sk, VAR_SOL_COV)) *data = m_sol_cov;
 	else if (StringMatch(sk, VAR_SOL_SW)) *data = m_soilStorageProfile;
+	else if (StringMatch(sk, VAR_SOWDAY)) *data = m_sowDay;
 	else if (StringMatch(sk, VAR_CROPSTA)) *data = m_cropsta;
 	else if (StringMatch(sk, VAR_ALBDAY)) *data = m_albedo;
 	else if (StringMatch(sk, VAR_AET_PLT)) *data = m_plantEPDay;
@@ -1138,6 +1223,9 @@ void ORYZA::Get1DData(const char *key, int *n, float **data)
 	else if (StringMatch(sk, VAR_BIOMASS)) *data = m_biomass;
 	else if (StringMatch(sk, VAR_DVS)) *data = m_dvs;
 	else if (StringMatch(sk, VAR_ANCRF)) *data = m_ancrf;
+	else if (StringMatch(sk, VAR_FR_PLANT_P)) *data = m_frPlantP;
+	else if (StringMatch(sk, VAR_FR_PHU_ACC)) *data = m_frPHUacc;
+	else if (StringMatch(sk, VAR_PLANT_P)) *data = m_plantP;
 	else
 		throw ModelException(MID_RICEGROW, "Get1DData", "Result " + sk +
 		" does not exist in current module. Please contact the module developer.");

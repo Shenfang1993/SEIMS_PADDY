@@ -489,8 +489,8 @@ void SEDR_SBAGNOLD::SedChannelRouting(int i)
 	//deposition and degradation
     initCon = allSediment / allWater; // kg/m^3
     //max concentration
-	maxCon = 0.001 * pow(peakVelocity, 1.f) * 1000.f; // kg/m^3
-    //maxCon = m_spcon * pow(peakVelocity, m_spexp) * 1000.f; // kg/m^3  
+	//maxCon = 0.001 * pow(peakVelocity, 1.f) * 1000.f; // kg/m^3
+    maxCon = m_spcon * pow(peakVelocity, m_spexp) * 1000.f; // kg/m^3  
 	//if (i == 12) cout<<"iniCon: "<<initCon<<", maxCon: "<<maxCon<<endl;
     //initial concentration,mix sufficiently
     sedDeposition = allWater * (initCon - maxCon); // kg

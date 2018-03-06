@@ -97,6 +97,12 @@ void BMPPlantMgtFactory::loadBMP(mongoc_client_t *conn, string &bmpDBName)
                 m_bmpSequence.push_back(uniqueMgtCode);
                 switch (mgtCode)
                 {
+				case BMP_PLTOP_paddyPlant:
+					    m_bmpPlantOps[uniqueMgtCode] = new PlantOperation(mgtCode, usebaseHU, husc, year, month, day, dvs, m_parameters);
+						break;
+				case BMP_PLTOP_paddyHarvestKill:
+					    m_bmpPlantOps[uniqueMgtCode] = new HarvestKillOperation(mgtCode, usebaseHU,husc, year, month, day, dvs, m_parameters);
+					    break;
                 case BMP_PLTOP_Plant:
                         m_bmpPlantOps[uniqueMgtCode] = new PlantOperation(mgtCode, usebaseHU, husc, year, month, day, dvs, m_parameters);
                         break;

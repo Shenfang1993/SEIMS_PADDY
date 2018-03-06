@@ -83,7 +83,7 @@ int DepressionFSDaily::Execute()
     CheckInputData();
     initialOutputs();
 
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int i = 0; i < m_nCells; ++i)
     {
         //////////////////////////////////////////////////////////////////////////
@@ -110,10 +110,7 @@ int DepressionFSDaily::Execute()
 				m_sd[i] += m_pe[i];
 				m_sr[i] = 0.f;
 			}
-			// the part of runoff comes from the paddy embankment area,which is direct to flow to the reach
-			if(FloatEqual(m_landuse[i],LANDUSE_ID_PADDY)){
-				m_sr[i] += m_P[i] * m_pcp2canfr_pr * m_embnkfr_pr;
-			}
+			
 			//////////////////////////////////////////////////////////////////////////
 			// evaporation
 			if (m_sd[i] > 0)
@@ -149,6 +146,10 @@ int DepressionFSDaily::Execute()
 			{
 				m_ed[i] = 0.f;
 				m_sd[i] = 0.f;
+			}
+			// the part of runoff comes from the paddy embankment area,which is direct to flow to the reach
+			if(FloatEqual(m_landuse[i],LANDUSE_ID_PADDY)){
+				m_sr[i] += m_P[i] * m_pcp2canfr_pr * m_embnkfr_pr;
 			}
 		} 
 		else{

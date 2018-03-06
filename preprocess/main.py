@@ -31,10 +31,10 @@ if __name__ == "__main__":
     ImportDailyMeteoData(SitesMList)
     ImportDailyPrecData(SitesPList)
     # # # Spatial Data derived from DEM
-    SubbasinDelineation()
+    #SubbasinDelineation()
     # # # Measurement Data, such as discharge, sediment yield.
-    ImportMeasurementData()
+    #ImportMeasurementData()
     # # # Extract parameters from landuse, soil properties etc.
-    ExtractParameters()
+    #ExtractParameters()
     # # Import to MongoDB database
-    BuildMongoDB()
+    #BuildMongoDB()

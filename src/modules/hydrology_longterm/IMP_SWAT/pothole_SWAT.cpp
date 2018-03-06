@@ -377,13 +377,13 @@ int IMP_SWAT::Execute()
 			else{
 				releaseWater(id);
 			}
-			/*if(id == 70){
+			if(id == 70){
 				ofstream fout;
 				fout.open("j:\\pot.txt", ios::app);
 				fout << m_potVol[70] << "\t" << m_potVolMin[70] << "\n";
 				fout << flush;
 				fout.close();
-			}*/
+			}
 		}
 	}
 	

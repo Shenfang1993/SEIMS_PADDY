@@ -108,7 +108,14 @@ extern "C" SEIMS_MODULE_API const char *MetadataInformation()
 	mdi.AddParameter(VAR_LLLE, UNIT_PRESSURE, DESC_LLLE, Source_ParameterDB, DT_Single);
 	mdi.AddParameter(VAR_ULLE, UNIT_PRESSURE, DESC_ULLE, Source_ParameterDB, DT_Single);
 	mdi.AddParameter(VAR_LLDL, UNIT_PRESSURE, DESC_LLDL, Source_ParameterDB, DT_Single);
-	mdi.AddParameter(VAR_ULDL, UNIT_PRESSURE, DESC_ULDL, Source_ParameterDB, DT_Single);	
+	mdi.AddParameter(VAR_ULDL, UNIT_PRESSURE, DESC_ULDL, Source_ParameterDB, DT_Single);
+	mdi.AddParameter(VAR_PUPDIS, UNIT_NON_DIM, DESC_PUPDIS, Source_ParameterDB, DT_Single);
+	mdi.AddParameter(VAR_BP1, UNIT_NON_DIM, DESC_BP1, Source_ParameterDB, DT_Raster1D);
+	mdi.AddParameter(VAR_BP2, UNIT_NON_DIM, DESC_BP2, Source_ParameterDB, DT_Raster1D);
+	mdi.AddParameter(VAR_BP3, UNIT_NON_DIM, DESC_BP3, Source_ParameterDB, DT_Raster1D);
+	mdi.AddParameter(VAR_T_BASE, UNIT_TEMP_DEG, DESC_T_BASE, Source_ParameterDB, DT_Raster1D);
+	mdi.AddParameter(VAR_SOL_SOLP, UNIT_CONT_KGHA, DESC_SOL_SOLP, Source_ParameterDB, DT_Raster2D);
+	mdi.AddParameter(VAR_PHUPLT, UNIT_HEAT_UNIT, DESC_PHUPLT, Source_ParameterDB, DT_Raster1D);
 	
 	/// Soil parameters related raster data
     mdi.AddParameter(VAR_SOILLAYERS, UNIT_NON_DIM, DESC_SOILLAYERS, Source_ParameterDB, DT_Raster1D);
@@ -149,6 +156,7 @@ extern "C" SEIMS_MODULE_API const char *MetadataInformation()
 	mdi.AddOutput(VAR_SOL_RSD, UNIT_CONT_KGHA, DESC_SOL_RSD, DT_Raster2D);
 	mdi.AddOutput(VAR_ALBDAY, UNIT_NON_DIM, DESC_ALBDAY, DT_Raster1D);
 	mdi.AddOutput(VAR_AET_PLT, UNIT_DEPTH_MM, DESC_AET_PLT, DT_Raster1D);
+	mdi.AddOutput(VAR_FR_PHU_ACC, UNIT_HEAT_UNIT, DESC_FR_PHU_ACC, DT_Raster1D);
 
 	// rice
 	mdi.AddParameter(VAR_CROPSTA, UNIT_NON_DIM, DESC_CROPSTA, Source_ParameterDB, DT_Raster1D);
@@ -157,6 +165,7 @@ extern "C" SEIMS_MODULE_API const char *MetadataInformation()
 
 	// rice related, changed with days 
 	mdi.AddOutput(VAR_CROPSTA, UNIT_NON_DIM, DESC_CROPSTA, DT_Raster1D);
+	mdi.AddOutput(VAR_SOWDAY, UNIT_NON_DIM, DESC_SOWDAY, DT_Raster1D);
 	mdi.AddOutput(VAR_TS, UNIT_PHENOLOGY, DESC_TS, DT_Raster1D);
 	mdi.AddOutput(VAR_WLVG, UNIT_CONT_KGHA, DESC_WLVG, DT_Raster1D);
     mdi.AddOutput(VAR_WLVD, UNIT_CONT_KGHA, DESC_WLVD, DT_Raster1D);
@@ -179,7 +188,7 @@ extern "C" SEIMS_MODULE_API const char *MetadataInformation()
     //mdi.AddOutput(VAR_IGRO, UNIT_NON_DIM, DESC_IGRO, DT_Raster1D);
     mdi.AddOutput(VAR_LAST_SOILRD, UNIT_DEPTH_MM, DESC_LAST_SOILRD, DT_Raster1D);
     mdi.AddOutput(VAR_LAIDAY, UNIT_AREA_RATIO, DESC_LAIDAY, DT_Raster1D);
-    mdi.AddOutput(VAR_PLANT_N, UNIT_CONT_KGHA, DESC_PLANT_N, DT_Raster1D);
+    mdi.AddOutput(VAR_RICE_PLANT_N, UNIT_CONT_KGHA, DESC_RICE_PLANT_N, DT_Raster1D);
     mdi.AddOutput(VAR_PLANT_P, UNIT_CONT_KGHA, DESC_PLANT_P, DT_Raster1D);
     mdi.AddOutput(VAR_FR_PLANT_N, UNIT_NON_DIM, DESC_FR_PLANT_N, DT_Raster1D);
     mdi.AddOutput(VAR_FR_PLANT_P, UNIT_NON_DIM, DESC_FR_PLANT_P, DT_Raster1D);

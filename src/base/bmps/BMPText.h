@@ -136,6 +136,8 @@
 #define BMP_PLTOP_ContinuousPesticide    15
 #define BMP_PLTOP_Burning                            16
 #define BMP_PLTOP_SKIPYEAR                    17
+#define BMP_PLTOP_paddyPlant             21
+#define BMP_PLTOP_paddyHarvestKill       22
 
 /// Plant management fields
 #define BMP_PLTOP_FLD_LUCC                    "LANDUSE_ID"

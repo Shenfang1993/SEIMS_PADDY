@@ -172,6 +172,8 @@ private:
     float *m_frPlantP;
     /// amount of nitrogen in plant biomass (kg/ha), plantn in SWAT
     float *m_plantN;
+	/// amount of nitrogen in plant biomass (kg/ha), from Biomass_EPIC
+	float *m_ricePlantN;
     /// amount of phosphorus in plant biomass (kg/ha), plantp in SWAT
     float *m_plantP;
     /// actual ET simulated during life of plant, plt_et in SWAT
@@ -184,6 +186,30 @@ private:
     float *m_biomass;
 	/// Dry weight of rough rice (final yield)  
 	float *m_wrr;
+	/// Dry weight of roots
+	float *m_wrt;
+	/// Total aboveground dry matter
+	float *m_wagt;
+	/// root length or root depth
+	float *m_zrt;
+	/// Temperature sum
+	float *m_ts;
+	/// Dry weight of green leaves  kg / ha
+	float *m_wlvg;
+	/// Dry weight of dead leaves
+	float *m_wlvd;
+	/// dry weight of stems reserves
+	float *m_wsts;
+	/// dry weight of structural stems
+	float *m_wstr;
+	/// Number of grains
+	float *m_ngr;
+	/// Total net CO2 assimilation  kg CO2 ha-1
+	float *m_tnass;
+	/// dry weight of storage organs
+	float *m_wso;
+	/// Number of spikelets
+	float *m_nsp;
 
     /** HarvestKill operation related **/
     ///// bio_hv(:,:,:)|kg/ha          |harvested biomass (dry weight)

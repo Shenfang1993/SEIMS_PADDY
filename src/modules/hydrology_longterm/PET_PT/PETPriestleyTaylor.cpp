@@ -151,6 +151,13 @@ int PETPriestleyTaylor::Execute()
 
         float petValue = pet_alpha * (dlt / (dlt + gma)) * raNet / latentHeat;
         m_pet[i] = m_petFactor * max(0.f, petValue);
+		if (i == 70){
+		ofstream fout;
+		fout.open("j:\\pet_after.txt", ios::app);
+		fout << m_pet[70] << "\n";
+		fout << flush;
+		fout.close();
+		}
     }
     return 0;
 }
